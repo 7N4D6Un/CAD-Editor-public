@@ -1,0 +1,513 @@
+package com.github.rinorsi.cadeditor.client.context;
+
+import com.github.franckyi.guapi.api.event.MouseButtonEvent;
+import com.github.rinorsi.cadeditor.client.ClientCache;
+import com.github.rinorsi.cadeditor.client.ClientUtil;
+import com.github.rinorsi.cadeditor.client.Vault;
+import com.github.rinorsi.cadeditor.common.ModTexts;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NumericTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+
+
+public class ItemEditorContext extends EditorContext<ItemEditorContext> {
+    private static final double GIVE_NON_FINITE_REPLACEMENT = 2048.0d;
+    private static final Pattern SIMPLE_KEY = Pattern.compile("[a-z0-9_\\-+.]+");
+    private static final Set<String> BOOLEAN_HINTS = Set.of(new String[]{"enchantment_glint_override", "keep_hanging", "keep_owner", "keep_on_death", "keep_on_death_loss", "creative_slot_lock", "show_in_tooltip", "show_in_additional_tooltip", "show_in_enchantment_tooltip", "show_in_tooltips", "hide_tooltip", "hide_additional_tooltip", "hide_enchantment_tooltip", "hide_tooltips", "glint_override"});
+    private ItemStack itemStack;
+    private GiveSanitizeReport lastGiveSanitizeReport;
+
+    
+    private static final class GiveFormatContext {
+        private int nonFiniteReplacementCount;
+
+        private GiveFormatContext() {
+        }
+
+        private void markNonFiniteReplacement() {
+            this.nonFiniteReplacementCount++;
+        }
+    }
+
+    
+    private static record GiveSanitizeReport(int nonFiniteReplacementCount) {
+
+        private static GiveSanitizeReport none() {
+            return new GiveSanitizeReport(0);
+        }
+
+        private boolean hasReplacements() {
+            return this.nonFiniteReplacementCount > 0;
+        }
+    }
+
+    public ItemEditorContext(ItemStack itemStack, Component errorTooltip, boolean canSaveToVault, Consumer<ItemEditorContext> action) {
+        super(saveStack(itemStack), errorTooltip, canSaveToVault, action);
+        this.lastGiveSanitizeReport = GiveSanitizeReport.none();
+        this.itemStack = itemStack.copy();
+    }
+
+    public ItemStack getItemStack() {
+        return this.itemStack;
+    }
+
+    public void setItemStack(ItemStack stack) {
+        this.itemStack = stack;
+    }
+
+    @Override 
+    public List<String> getStringSuggestions(List<String> path) {
+        List<String> suggestions = super.getStringSuggestions(path);
+        if (!suggestions.isEmpty()) {
+            return suggestions;
+        }
+        if (path == null || path.isEmpty()) {
+            return List.of();
+        }
+        String key = lastKey(path);
+        if (key == null) {
+            return List.of();
+        }
+        String parent = previousNamedKey(path, 1);
+        String grandParent = previousNamedKey(path, 2);
+        if ("id".equals(key)) {
+            if (path.size() == 1) {
+                return ClientCache.getItemSuggestions();
+            }
+            if (isEnchantmentContainer(parent, grandParent)) {
+                return ClientCache.getEnchantmentSuggestions();
+            }
+            if (isEffectContainer(parent, grandParent)) {
+                return ClientCache.getEffectSuggestions();
+            }
+            if (isItemContainer(parent, grandParent)) {
+                return ClientCache.getItemSuggestions();
+            }
+            if (equalsAnyIgnoreCase(parent, "entity") && equalsAnyIgnoreCase(grandParent, "minecraft:bucket_entity_data", "BucketEntityData")) {
+                return ClientCache.getEntitySuggestions();
+            }
+        }
+        if (equalsAnyIgnoreCase(key, "item", "Item")) {
+            return ClientCache.getItemSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "potion")) {
+            return ClientCache.getPotionSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "effect")) {
+            return ClientCache.getEffectSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "instrument")) {
+            return ClientCache.getInstrumentSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "pattern", "pattern_id") && containsTrimContext(path)) {
+            return ClientCache.getTrimPatternSuggestions();
+        }
+        if (equalsAnyIgnoreCase(key, "material", "material_id") && containsTrimContext(path)) {
+            return ClientCache.getTrimMaterialSuggestions();
+        }
+        return List.of();
+    }
+
+    private static boolean isEnchantmentContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "Enchantments", "StoredEnchantments", "minecraft:enchantments") || (equalsAnyIgnoreCase(parent, "levels") && equalsAnyIgnoreCase(grandParent, "minecraft:enchantments"));
+    }
+
+    private static boolean isEffectContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "effects", "custom_potion_effects", "status_effects") || (equalsAnyIgnoreCase(parent, "entries") && equalsAnyIgnoreCase(grandParent, "minecraft:food"));
+    }
+
+    private static boolean isItemContainer(String parent, String grandParent) {
+        return equalsAnyIgnoreCase(parent, "Items", "items", "HandItems", "ArmorItems", "ChargedProjectiles", "contents") || (equalsAnyIgnoreCase(parent, "stacks") && equalsAnyIgnoreCase(grandParent, "minecraft:container"));
+    }
+
+    private static boolean containsTrimContext(List<String> path) {
+        return pathContains(path, "minecraft:trim") || pathContains(path, "Trim") || pathContains(path, "trim");
+    }
+
+    private static ItemStack decodeStack(HolderLookup.Provider lookup, CompoundTag edited) {
+        return ClientUtil.parseItemStack(edited);
+    }
+
+    @Override
+    public void update() {
+        ItemStack result = this.itemStack.copy();
+        CompoundTag edited = getTag();
+        HolderLookup.Provider lookup = ClientUtil.registryAccess();
+        if (edited != null) {
+            try {
+                ItemStack parsed = decodeStack(lookup, edited);
+                if (!parsed.isEmpty()) {
+                    result = parsed;
+                } else if (!isAirTag(edited)) {
+                    ClientUtil.showMessage(ModTexts.Messages.ITEM_PARSE_FAILED);
+                }
+            } catch (Exception e) {
+            }
+        }
+        this.itemStack = result;
+        setTag(saveStack(result));
+        super.update();
+    }
+
+    private static boolean isAirTag(CompoundTag tag) {
+        String id = tag.getStringOr("id", "");
+        return "minecraft:air".equals(id) || "air".equals(id);
+    }
+
+    @Override 
+    public void saveToVault() {
+        Vault.getInstance().saveItem(getTag());
+        ClientUtil.showMessage(ModTexts.Messages.successSavedVault(ModTexts.ITEM));
+    }
+
+    @Override 
+    public MutableComponent getTargetName() {
+        return ModTexts.ITEM;
+    }
+
+    @Override 
+    public String getCommandName() {
+        return "/give";
+    }
+
+    @Override 
+    protected String getCommand() {
+        return buildGiveCommand(getItemStack());
+    }
+
+    private static CompoundTag saveStack(ItemStack stack) {
+        return ClientUtil.saveItemStack(stack);
+    }
+
+    private String buildGiveCommand(ItemStack stack) {
+        GiveFormatContext formatContext = new GiveFormatContext();
+        CompoundTag data = saveStack(stack);
+        String id = data.getStringOr("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+        CompoundTag components = data.getCompound("components").map(value -> value.copy()).orElseGet(CompoundTag::new);
+        if (data.contains("tag") && !components.contains("minecraft:custom_data")) {
+            data.getCompound("tag").filter(tag -> !tag.isEmpty()).ifPresent(legacy -> {
+                components.put("minecraft:custom_data", legacy.copy());
+            });
+        }
+        StringBuilder builder = new StringBuilder("/give @p ").append(id);
+        String componentSpec = formatComponentList(components, formatContext);
+        if (!componentSpec.isEmpty()) {
+            builder.append(componentSpec);
+        }
+        int count = stack.getCount();
+        if (count > 1) {
+            builder.append(' ').append(count);
+        }
+        this.lastGiveSanitizeReport = new GiveSanitizeReport(formatContext.nonFiniteReplacementCount);
+        return builder.toString();
+    }
+
+    private static String formatComponentList(CompoundTag components, GiveFormatContext formatContext) {
+        Tag value;
+        if (components == null || components.isEmpty()) {
+            return "";
+        }
+        CompoundTag normalized = normalizeComponents(components);
+        List<String> keys = new ArrayList<>(normalized.keySet());
+        Collections.sort(keys);
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        boolean hasEntry = false;
+        for (String key : keys) {
+            if (!key.startsWith("!") && (value = normalized.get(key)) != null && value.getId() != 0) {
+                String rendered = formatTagValue(key, value, formatContext);
+                if (!rendered.isEmpty()) {
+                    joiner.add(key + "=" + rendered);
+                    hasEntry = true;
+                }
+            }
+        }
+        return hasEntry ? joiner.toString() : "";
+    }
+
+    private static CompoundTag normalizeComponents(CompoundTag components) {
+        CompoundTag normalized = components.copy();
+        if (normalized.get("minecraft:attribute_modifiers") instanceof CompoundTag attributeCompound) {
+            ListTag modifiers = attributeCompound.getListOrEmpty("modifiers");
+            if (!modifiers.isEmpty()) {
+                Set<Identifier> usedIds = new HashSet<>();
+                for (Tag modifierTag : modifiers) {
+                    if (!(modifierTag instanceof CompoundTag modifierCompound)) {
+                        continue;
+                    }
+                    Identifier id = resolveModifierId(modifierCompound, usedIds);
+                    modifierCompound.putString("id", id.toString());
+                }
+            }
+        }
+        return normalized;
+    }
+
+    private static Identifier resolveModifierId(CompoundTag modifier, Set<Identifier> usedIds) {
+        String rawId = modifier.getString("id").orElse("").trim();
+        if (!rawId.isEmpty()) {
+            UUID uuid = parseUuidString(rawId);
+            if (uuid != null) {
+                return createModifierIdFromUuid(uuid, usedIds);
+            }
+            Identifier parsed = normalizeModifierId(rawId);
+            if (parsed != null && usedIds.add(parsed)) {
+                return parsed;
+            }
+        }
+        UUID fallbackUuid = readModifierUUID(modifier);
+        if (fallbackUuid != null) {
+            return createModifierIdFromUuid(fallbackUuid, usedIds);
+        }
+        return createModifierIdFromSeed(buildModifierSeed(modifier), usedIds);
+    }
+
+    private static Identifier createModifierIdFromSeed(String seed, Set<Identifier> usedIds) {
+        UUID uuid = UUID.nameUUIDFromBytes(seed.getBytes(StandardCharsets.UTF_8));
+        return createModifierIdFromUuid(uuid, usedIds);
+    }
+
+    private static Identifier createModifierIdFromUuid(UUID uuid, Set<Identifier> usedIds) {
+        Identifier withSuffix;
+        String compact = uuid.toString().replace("-", "");
+        String basePath = "m_" + compact.substring(0, 12);
+        Identifier direct = Identifier.fromNamespaceAndPath("cadeditor", basePath);
+        if (usedIds.add(direct)) {
+            return direct;
+        }
+        int suffix = 1;
+        do {
+            int i = suffix;
+            suffix++;
+            withSuffix = Identifier.fromNamespaceAndPath("cadeditor", basePath + "_" + Integer.toHexString(i));
+        } while (!usedIds.add(withSuffix));
+        return withSuffix;
+    }
+
+    private static Identifier normalizeModifierId(String raw) {
+        String value = raw == null ? "" : raw.trim();
+        if (value.isEmpty()) {
+            return null;
+        }
+        if (!value.contains(":")) {
+            value = "minecraft:" + value;
+        }
+        return Identifier.tryParse(value);
+    }
+
+    private static String buildModifierSeed(CompoundTag modifier) {
+        CompoundTag copy = modifier.copy();
+        copy.remove("id");
+        copy.remove("UUID");
+        copy.remove("uuid");
+        return copy.toString();
+    }
+
+    private static UUID readModifierUUID(CompoundTag modifier) {
+        UUID id = parseUuidFromTag(modifier, "id");
+        if (id != null) {
+            return id;
+        }
+        UUID uuidFromUuidKey = parseUuidFromTag(modifier, "uuid");
+        if (uuidFromUuidKey != null) {
+            return uuidFromUuidKey;
+        }
+        return parseUuidFromTag(modifier, "UUID");
+    }
+
+    private static UUID parseUuidFromTag(CompoundTag modifier, String key) {
+        StringTag stringTag;
+        if (!modifier.contains(key) || (stringTag = (StringTag) modifier.get(key)) == null) {
+            return null;
+        }
+        if (stringTag.getId() == 8) {
+            return parseUuidString((String) stringTag.asString().orElse(""));
+        }
+        if (stringTag.getId() == 11) {
+            return (UUID) modifier.getIntArray(key).map(ItemEditorContext::uuidFromIntArray).orElse(null);
+        }
+        return null;
+    }
+
+    private static UUID parseUuidString(String value) {
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        try {
+            return UUID.fromString(trimmed);
+        } catch (IllegalArgumentException e) {
+            String candidate = trimmed;
+            int underscore = candidate.lastIndexOf(95);
+            if (underscore >= 0 && underscore + 1 < candidate.length()) {
+                candidate = candidate.substring(underscore + 1);
+            } else if (candidate.contains(":")) {
+                candidate = candidate.substring(candidate.lastIndexOf(58) + 1);
+            }
+            return parseUuidFromHex(candidate.replace("-", ""));
+        }
+    }
+
+    private static UUID parseUuidFromHex(String value) {
+        if (value == null) {
+            return null;
+        }
+        String hex = value.trim();
+        if (hex.length() != 32) {
+            return null;
+        }
+        try {
+            long most = Long.parseUnsignedLong(hex.substring(0, 16), 16);
+            long least = Long.parseUnsignedLong(hex.substring(16), 16);
+            return new UUID(most, least);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static UUID uuidFromIntArray(int[] data) {
+        if (data.length != 4) {
+            return null;
+        }
+        long most = (((long) data[0]) << 32) | (((long) data[1]) & 4294967295L);
+        long least = (((long) data[2]) << 32) | (((long) data[3]) & 4294967295L);
+        return new UUID(most, least);
+    }
+
+    private static String formatTagValue(String key, Tag tag, GiveFormatContext formatContext) {
+        return switch (tag.getId()) {
+            case 1 -> formatByte(key, ((NumericTag) tag).byteValue());
+            case 2 -> Integer.toString(((NumericTag) tag).shortValue());
+            case 3 -> Integer.toString(((NumericTag) tag).intValue());
+            case 4 -> Long.toString(((NumericTag) tag).longValue());
+            case 5 -> formatFloating(((NumericTag) tag).floatValue(), formatContext);
+            case 6 -> formatFloating(((NumericTag) tag).doubleValue(), formatContext);
+            case 7, 11, 12 -> tag.toString();
+            case 8 -> formatString(((StringTag) tag).asString().orElse(""));
+            case 9 -> formatList((ListTag) tag, formatContext);
+            case 10 -> formatCompound((CompoundTag) tag, formatContext);
+            default -> tag.toString();
+        };
+    }
+
+    private static String formatCompound(CompoundTag tag, GiveFormatContext formatContext) {
+        if (tag.isEmpty()) {
+            return "{}";
+        }
+        List<String> keys = new ArrayList<>(tag.keySet());
+        Collections.sort(keys);
+        StringJoiner joiner = new StringJoiner(", ", "{", "}");
+        for (String key : keys) {
+            Tag value = tag.get(key);
+            if (value != null && value.getId() != 0) {
+                String formattedKey = SIMPLE_KEY.matcher(key).matches() ? key : StringTag.quoteAndEscape(key);
+                String formattedValue = formatTagValue(key, value, formatContext);
+                joiner.add(formattedKey + ":" + formattedValue);
+            }
+        }
+        return joiner.toString();
+    }
+
+    private static String formatList(ListTag list, GiveFormatContext formatContext) {
+        if (list.isEmpty()) {
+            return "[]";
+        }
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        for (Tag tag : list) {
+            joiner.add(formatTagValue(null, tag, formatContext));
+        }
+        return joiner.toString();
+    }
+
+    private static String formatString(String value) {
+        return SIMPLE_KEY.matcher(value).matches() ? value : StringTag.quoteAndEscape(value);
+    }
+
+    private static String formatByte(String key, byte value) {
+        if (isBooleanKey(key) && (value == 0 || value == 1)) {
+            return value == 1 ? "true" : "false";
+        }
+        return Byte.toString(value);
+    }
+
+    private static boolean isBooleanKey(String key) {
+        if (key == null || key.isEmpty()) {
+            return false;
+        }
+        String bare = key.contains(":") ? key.substring(key.indexOf(58) + 1) : key;
+        return BOOLEAN_HINTS.contains(bare) || bare.startsWith("is_") || bare.startsWith("has_") || bare.startsWith("can_") || bare.startsWith("show_") || bare.startsWith("keep_") || bare.startsWith("allow_") || bare.startsWith("use_") || bare.startsWith("enable_") || bare.startsWith("should_") || bare.startsWith("hide_");
+    }
+
+    private static String formatFloating(double value, GiveFormatContext formatContext) {
+        if (Double.isNaN(value)) {
+            formatContext.markNonFiniteReplacement();
+            return formatFixed(GIVE_NON_FINITE_REPLACEMENT, 1);
+        }
+        if (Double.isInfinite(value)) {
+            formatContext.markNonFiniteReplacement();
+            double replaced = value > 0.0d ? GIVE_NON_FINITE_REPLACEMENT : -2048.0d;
+            return formatFixed(replaced, 1);
+        }
+        double roundedTenth = Math.round(value * 10.0d) / 10.0d;
+        if (Math.abs(value - roundedTenth) < 1.0E-6d) {
+            return formatFixed(roundedTenth, 1);
+        }
+        double roundedThousandth = Math.round(value * 1000.0d) / 1000.0d;
+        if (Math.abs(value - roundedThousandth) < 1.0E-7d) {
+            return trimTrailingZeros(Double.toString(roundedThousandth));
+        }
+        return trimTrailingZeros(BigDecimal.valueOf(value).stripTrailingZeros().toPlainString());
+    }
+
+    private static String formatFixed(double value, int decimals) {
+        BigDecimal bd = BigDecimal.valueOf(value).setScale(decimals, RoundingMode.HALF_UP);
+        return trimTrailingZeros(bd.toPlainString());
+    }
+
+    private static String trimTrailingZeros(String value) {
+        if (!value.contains(".")) {
+            return value;
+        }
+        int end = value.length();
+        while (end > 0 && value.charAt(end - 1) == '0') {
+            end--;
+        }
+        if (end > 0 && value.charAt(end - 1) == '.') {
+            end++;
+        }
+        if (end > value.length()) {
+            end = value.length();
+        }
+        return value.substring(0, end);
+    }
+
+    @Override 
+    protected MutableComponent getCopySuccessMessage() {
+        if ("/give".equals(getCommandName())) {
+            if (this.lastGiveSanitizeReport.hasReplacements()) {
+                return ModTexts.Messages.successCopyGiveCommandSanitized(this.lastGiveSanitizeReport.nonFiniteReplacementCount(), trimTrailingZeros(Double.toString(GIVE_NON_FINITE_REPLACEMENT)));
+            }
+            return ModTexts.Messages.successCopyGiveCommand();
+        }
+        return super.getCopySuccessMessage();
+    }
+}

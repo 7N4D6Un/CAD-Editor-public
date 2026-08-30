@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.rinorsi.cadeditor.mixin",
+  "plugin": "com.github.rinorsi.cadeditor.mixin.CADEditorMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "FoodDataAccessor",
+    "AbstractContainerScreenMixin",
+    "AbstractWidgetMixin",
+    "CreativeModeInventoryScreenMixin",
+    "MultiLineEditBoxMixin",
+    "MultiLineEditBoxHighlightMixin",
+    "MultilineTextFieldMixin",
+    "MultilineTextFieldStringViewAccessor",
+    "InventoryAccessor",
+    "TextFieldWidgetMixin",
+    "AbstractTextAreaWidgetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

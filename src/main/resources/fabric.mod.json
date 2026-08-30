@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "cadeditor",
+  "version": "${version}",
+  "name": "CAD Editor",
+  "description": "A simple GUI mod to edit items, blocks, and entities in your world.",
+  "license": "MIT",
+  "icon": "assets/cadeditor/logo.png",
+  "authors": ["rinorsi", "BadCheese683435", "FleTime"],
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.github.rinorsi.cadeditor.fabric.FabricCADEditorMod"
+    ],
+    "client": [
+      "com.github.rinorsi.cadeditor.fabric.FabricCADEditorModClient"
+    ],
+    "modmenu": [
+      "com.github.rinorsi.cadeditor.fabric.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "cadeditor-common.mixins.json"
+  ],
+  "accessWidener": "cadeditor.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": ">=0.154.2",
+    "minecraft": "26.2",
+    "java": ">=25"
+  },
+  "suggests": {
+    "modmenu": ">=20.0.1"
+  },
+  "contact": {
+    "sources": "https://github.com/7N4D6Un/CAD-Editor-public"
+  }
+}

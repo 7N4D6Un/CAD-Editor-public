@@ -1,35 +1,21 @@
-[English](./README.md) | [简体中文](./README_CN.md)
 
-## Where to download CAD Editor
+[简体中文](./README.md) | [English](./README_EN.md)
 
-[![CurseForge](https://cf.way2muchnoise.eu/1352735.svg?badge_style=for_the_badge)](https://legacy.curseforge.com/minecraft/mc-mods/cad-editor)
-[![Modrinth](https://img.shields.io/modrinth/dt/cad-editor?label=Modrinth\&style=for-the-badge\&logo=modrinth)](https://modrinth.com/project/cad-editor)
+## CAD Editor
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://mit-license.org/)
 
 ---
 
-## What is CAD Editor?
+## CAD Editor 是什么
 
-A simple, in-game visual editor that lets you edit items, blocks, and entities right inside your current world.
-It supports Minecraft’s **data components** system (1.20.5+), covering common gameplay fields like Custom Model Data, attributes, enchantments, name/lore, container & loot tables, effects, sign text, and more.
+去原项目看去。
 
-CAD Editor (Component And Data Editor) is a refactored and actively maintained continuation based on IBE Editor (original by Skye, MIT license). I am not affiliated with Skye and this is not an official version; all original credits and notices are preserved.
+## 安装与依赖
+* 加载器：仅限 Fabric 26.2
+* Fabric 版本需要安装 [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
+* 建议使用 Java 25
 
-Original project address:
-https://github.com/skyecodes/IBE-Editor
-
-## Key features
-
-* **In-game GUI editing** – what you see is what you get, then grab the result instantly
-* **Component-first workflow** – designed for 1.21+ `components`, with common NBT use cases still considered
-* **Wide coverage** – frequently used fields and advanced gameplay bits for items/blocks/entities
-* **Quick copy/export** – one-click copy to command for easy sharing and debugging
-
-## Installation & requirements
-
-* **Loaders:** NeoForge or Fabric
-* **Fabric users:** also install [Fabric API](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
-* **Java:** 21 recommended
-
-## Build from source
-The project uses the [Architectury](https://github.com/architectury) toolchain.
+## 本项目做了什么
+* 修复了一些影响使用的问题
+* 修复或移除了失效的组件，添加了更多新组件的支持
+* 按照个人喜好，重新规划了标准编辑器的界面

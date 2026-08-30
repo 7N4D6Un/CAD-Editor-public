@@ -1,0 +1,107 @@
+package com.github.rinorsi.cadeditor.client.screen.model.entry;
+
+import com.github.franckyi.databindings.api.BooleanProperty;
+import com.github.franckyi.databindings.api.IntegerProperty;
+import com.github.franckyi.guapi.api.mvc.Model;
+import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
+
+public abstract class EntryModel implements Model {
+    private final CategoryModel category;
+    private final BooleanProperty validProperty = BooleanProperty.create(true);
+    private final IntegerProperty listIndexProperty = IntegerProperty.create(-1);
+    private final IntegerProperty listSizeProperty = IntegerProperty.create(-1);
+    private final BooleanProperty reorderableProperty = BooleanProperty.create(true);
+    private final BooleanProperty enabledProperty = BooleanProperty.create(true);
+
+    protected EntryModel(CategoryModel category) {
+        this.category = category;
+    }
+
+    public CategoryModel getCategory() {
+        return category;
+    }
+
+    public boolean isEnabled() {
+        return enabledProperty().getValue();
+    }
+
+    public BooleanProperty enabledProperty() {
+        return enabledProperty;
+    }
+
+    public void setEnabled(boolean value) {
+        enabledProperty().setValue(value);
+    }
+
+    public boolean isValid() {
+        return validProperty().getValue();
+    }
+
+    public BooleanProperty validProperty() {
+        return validProperty;
+    }
+
+    public void setValid(boolean value) {
+        validProperty().setValue(value);
+    }
+
+    public int getListIndex() {
+        return listIndexProperty().getValue();
+    }
+
+    public IntegerProperty listIndexProperty() {
+        return listIndexProperty;
+    }
+
+    public void setListIndex(int value) {
+        listIndexProperty().setValue(value);
+    }
+
+    public boolean isResetable() {
+        return true;
+    }
+
+    public int getListSize() {
+        return listSizeProperty().getValue();
+    }
+
+    public IntegerProperty listSizeProperty() {
+        return listSizeProperty;
+    }
+
+    public void setListSize(int value) {
+        listSizeProperty().setValue(value);
+    }
+
+    public boolean isReorderable() {
+        return reorderableProperty().getValue();
+    }
+
+    public BooleanProperty reorderableProperty() {
+        return reorderableProperty;
+    }
+
+    public void setReorderable(boolean value) {
+        reorderableProperty().setValue(value);
+    }
+
+    public abstract void apply();
+
+    public boolean isDeletable() {
+        return true;
+    }
+
+    public void reset() {
+    }
+
+    public abstract Type getType();
+
+    public enum Type {
+        INFO,
+        STRING, NUMBER, TEXT, ENUM, ACTION, ADD_LIST_ENTRY, BOOLEAN, ITEM, ENTITY,
+        ENCHANTMENT, HIDE_FLAG, ATTRIBUTE_MODIFIER, SELECTION, FILTERED_SELECTION, SELECTION_POTION, POTION_EFFECT,
+        FOOD_EFFECT, ARMOR_COLOR, FIREWORK_COLOR, VAULT_ITEM, VAULT_ENTITY, ENTITY_EQUIPMENT, CONTAINER_SLOT, TOOL_RULE,
+        MAP_DECORATION, USE_REMAINDER, WRITABLE_BOOK_PAGES, VILLAGER_TRADE_ITEMS, VILLAGER_TRADE_VALUES, VILLAGER_TRADE,
+        STRING_WITH_ACTIONS, SPACER
+    }
+}
