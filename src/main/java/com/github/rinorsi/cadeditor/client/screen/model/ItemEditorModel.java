@@ -131,6 +131,7 @@ public class ItemEditorModel extends StandardEditorModel {
     private boolean consumableBehaviorEnabled;
     private boolean foodBehaviorEnabled;
     private boolean deathProtectionBehaviorEnabled;
+    private boolean toolBehaviorEnabled;
     private boolean shouldSyncExtraComponentsFromStack;
     private ItemGeneralCategoryModel generalCategory;
     private ItemExtraComponentsCategoryModel extraComponentsCategory;
@@ -138,6 +139,7 @@ public class ItemEditorModel extends StandardEditorModel {
     private static final String FOOD_COMPONENT_KEY = "minecraft:food";
     private static final String CONSUMABLE_COMPONENT_KEY = "minecraft:consumable";
     private static final String USE_REMAINDER_COMPONENT_KEY = "minecraft:use_remainder";
+    private static final String TOOL_COMPONENT_KEY = "minecraft:tool";
 
     private static final String HIDE_TOOLTIP_COMPONENT_KEY = "minecraft:hide_tooltip";
     private static final String TOOLTIP_DISPLAY_COMPONENT_KEY = "minecraft:tooltip_display";
@@ -180,6 +182,8 @@ public class ItemEditorModel extends StandardEditorModel {
         this.consumableBehaviorEnabled = stack.has(DataComponents.CONSUMABLE);
         this.desiredUseRemainderEnabled = stack.has(DataComponents.USE_REMAINDER);
         this.deathProtectionBehaviorEnabled = stack.has(DataComponents.DEATH_PROTECTION);
+        this.toolBehaviorEnabled = !hasRemovedComponent(getContext().getTag(), TOOL_COMPONENT_KEY)
+                && (stack.has(DataComponents.TOOL) || item.components().get(DataComponents.TOOL) != null || stack.is(ItemTags.MINING_ENCHANTABLE));
         this.foodState.loadFrom(stack);
         this.consumableState.loadFrom(stack);
         this.useRemainderState.loadFrom(stack);
@@ -378,6 +382,14 @@ public class ItemEditorModel extends StandardEditorModel {
 
     public void setDeathProtectionEnabled(boolean enabled) {
         this.deathProtectionBehaviorEnabled = enabled;
+    }
+
+    public void setToolBehaviorEnabled(boolean enabled) {
+        this.toolBehaviorEnabled = enabled;
+    }
+
+    public boolean isToolBehaviorEnabled() {
+        return this.toolBehaviorEnabled;
     }
 
     public void applyFoodComponents() {
@@ -1225,6 +1237,10 @@ public class ItemEditorModel extends StandardEditorModel {
         return root != null && root.contains(KEY_COMPONENTS) && root.getCompound(KEY_COMPONENTS).map(comp -> comp.contains(key)).orElse(false);
     }
 
+    private static boolean hasRemovedComponent(CompoundTag root, String key) {
+        return root != null && root.contains(KEY_COMPONENTS) && root.getCompound(KEY_COMPONENTS).map(comp -> comp.contains("!" + key)).orElse(false);
+    }
+
     private static CompoundTag ensureComponentsTag(CompoundTag root) {
         if (!root.contains(KEY_COMPONENTS)) {
             root.put(KEY_COMPONENTS, new CompoundTag());
@@ -1263,6 +1279,10 @@ public class ItemEditorModel extends StandardEditorModel {
         }
         if (!this.deathProtectionBehaviorEnabled) {
             suppressed.add("minecraft:death_protection");
+        }
+        if (!this.toolBehaviorEnabled
+                && (hasComponent(currentTag, TOOL_COMPONENT_KEY) || getContext().getItemStack().getItem().components().get(DataComponents.TOOL) != null)) {
+            suppressed.add(TOOL_COMPONENT_KEY);
         }
         return suppressed;
     }

@@ -13,7 +13,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.Block;
@@ -47,9 +46,10 @@ public class ItemToolCategoryModel extends ItemEditorCategoryModel {
             damagePerBlock = 0;
             creativeCanBreak = false;
         }
-        this.enableTool = effective != null || stack.is(ItemTags.MINING_ENCHANTABLE);
+        this.enableTool = getParent().isToolBehaviorEnabled();
         this.behaviorToggle = new BooleanEntryModel(this, ModTexts.gui("tool_behavior_enabled"), this.enableTool, value -> {
             this.enableTool = value != null && value;
+            getParent().setToolBehaviorEnabled(this.enableTool);
             syncEntriesEnabled();
         });
         getEntries().add(this.behaviorToggle);
