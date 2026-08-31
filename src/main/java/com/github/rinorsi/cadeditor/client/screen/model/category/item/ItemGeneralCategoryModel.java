@@ -524,9 +524,8 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getParent().getContext().getItemStack();
         if (this.repairableItemsRaw.isBlank()) {
             this.repairableItemsEntry.setValid(true);
-            stack.remove(DataComponents.REPAIRABLE);
-            getParent().removeComponentFromDataTag("minecraft:repairable");
-            DebugLog.info((java.util.function.Supplier<String>) () -> "[Repairable] Empty input, removing component");
+            stack.set(DataComponents.REPAIRABLE, new Repairable(HolderSet.empty()));
+            DebugLog.info((java.util.function.Supplier<String>) () -> "[Repairable] Empty input, writing empty component");
             return;
         }
         List<String> entries = parseIdentifierList(this.repairableItemsRaw);
