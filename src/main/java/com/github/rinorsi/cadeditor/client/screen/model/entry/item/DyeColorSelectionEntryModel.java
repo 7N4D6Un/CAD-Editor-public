@@ -53,10 +53,10 @@ public class DyeColorSelectionEntryModel extends SelectionEntryModel {
     public static List<ListSelectionElementModel> getDyeColorSelectionItems() {
         List<ListSelectionElementModel> list = new ArrayList<>();
         for (String color : VALUES) {
-            Item bannerItem = BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(color + "_banner"));
-            list.add(new SelectableItemListSelectionElementModel("block.minecraft." + color + "_banner",
+            Item dyeItem = BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(color + "_dye"));
+            list.add(new SelectableItemListSelectionElementModel("item.minecraft." + color + "_dye",
                     Identifier.withDefaultNamespace(color),
-                    () -> bannerItem == null ? ItemStack.EMPTY : new ItemStack(bannerItem)));
+                    () -> dyeItem == null ? ItemStack.EMPTY : new ItemStack(dyeItem)));
         }
         return list;
     }
