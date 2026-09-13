@@ -108,6 +108,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
             case VILLAGER_TRADE -> throw new IllegalStateException("Villager trade base model should not be instantiated as entry");
             case SPACER ->
                     MVC.createViewAndBind((SpacerEntryModel) model, SpacerEntryView::new, SpacerEntryController::new);
+            case BANNER_LAYER ->
+                    MVC.createViewAndBind((BannerLayerEntryModel) model, StringWithActionsEntryView::new, BannerLayerEntryController::new);
         };
     }
 

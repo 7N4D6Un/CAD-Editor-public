@@ -4,8 +4,8 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsE
 import com.github.rinorsi.cadeditor.client.screen.view.entry.StringWithActionsEntryView;
 import net.minecraft.network.chat.Component;
 
-public class StringWithActionsEntryController extends ValueEntryController<StringWithActionsEntryModel, StringWithActionsEntryView> {
-    public StringWithActionsEntryController(StringWithActionsEntryModel model, StringWithActionsEntryView view) {
+public class StringWithActionsEntryController<M extends StringWithActionsEntryModel> extends ValueEntryController<M, StringWithActionsEntryView> {
+    public StringWithActionsEntryController(M model, StringWithActionsEntryView view) {
         super(model, view);
     }
 

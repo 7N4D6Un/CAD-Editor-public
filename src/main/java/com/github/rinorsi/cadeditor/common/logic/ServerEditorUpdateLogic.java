@@ -74,53 +74,53 @@ public final class ServerEditorUpdateLogic {
     }
 
     public static void onMainHandItemEditorUpdate(ServerPlayer player, MainHandItemEditorPacket.Update response) {
-        ItemStack normalizedStack = normalize(response.getItemStack());
+        ItemStack updatedStack = response.getItemStack();
         if (!PermissionLogic.hasPermission(player)) {
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
             return;
         }
         try {
             int hotbarIdx = player.getInventory().getSelectedSlot();
-            player.getInventory().setItem(hotbarIdx, normalizedStack.copy());
-            player.setItemInHand(InteractionHand.MAIN_HAND, normalizedStack.copy());
+            player.getInventory().setItem(hotbarIdx, updatedStack.copy());
+            player.setItemInHand(InteractionHand.MAIN_HAND, updatedStack.copy());
             player.getInventory().setChanged();
             if (player.containerMenu != null) {
                 player.containerMenu.broadcastChanges();
             }
             syncMainHand(player);
             forceInventorySync(player);
-            queueMainHandVerification(player, normalizedStack);
+            queueMainHandVerification(player, updatedStack);
         } catch (Exception e) {
             LOGGER.error("Failed to apply main hand item update for {}", player.getName().getString(), e);
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.Messages.ERROR_GENERIC);
         }
     }
 
     public static void onPlayerInventoryItemEditorUpdate(ServerPlayer player, PlayerInventoryItemEditorPacket.Update response) {
-        ItemStack normalizedStack = normalize(response.getItemStack());
+        ItemStack updatedStack = response.getItemStack();
         if (!PermissionLogic.hasPermission(player)) {
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
             return;
         }
         try {
-            player.getInventory().setItem(response.getSlot(), normalizedStack.copy());
+            player.getInventory().setItem(response.getSlot(), updatedStack.copy());
             player.getInventory().setChanged();
             if (player.containerMenu != null) {
                 player.containerMenu.broadcastChanges();
             }
             syncInventorySlot(player, response.getSlot());
             forceInventorySync(player);
-            queueInventoryVerification(player, response.getSlot(), normalizedStack);
+            queueInventoryVerification(player, response.getSlot(), updatedStack);
         } catch (Exception e) {
             LOGGER.error("Failed to apply inventory item update for {} (slot {})", player.getName().getString(), response.getSlot(), e);
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.Messages.ERROR_GENERIC);
         }
     }
 
     public static void onBlockInventoryItemEditorUpdate(ServerPlayer player, BlockInventoryItemEditorPacket.Update response) {
-        ItemStack normalizedStack = normalize(response.getItemStack());
+        ItemStack updatedStack = response.getItemStack();
         if (!PermissionLogic.hasPermission(player)) {
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
             return;
         }
         ServerLevel level = player.level();
@@ -128,47 +128,47 @@ public final class ServerEditorUpdateLogic {
         BlockState state = level.getBlockState(pos);
         if (level.getBlockEntity(pos) instanceof Container container) {
             try {
-                container.setItem(response.getSlot(), normalizedStack.copy());
+                container.setItem(response.getSlot(), updatedStack.copy());
                 container.setChanged();
                 level.sendBlockUpdated(pos, state, state, 2);
-                CommonUtil.showItemUpdateSuccess(player, normalizedStack);
+                CommonUtil.showItemUpdateSuccess(player, updatedStack);
                 if (player.containerMenu != null) {
                     player.containerMenu.broadcastChanges();
                 }
                 return;
             } catch (Exception e) {
                 LOGGER.error("Failed to update block inventory at {} (slot {}) for {}", pos, response.getSlot(), player.getName().getString(), e);
-                CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
+                CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.Messages.ERROR_GENERIC);
                 return;
             }
         }
-        CommonUtil.showItemUpdateFailure(player, normalizedStack, Component.translatable("cadeditor.message.no_target_found", new Object[]{ModTexts.ITEM}));
+        CommonUtil.showItemUpdateFailure(player, updatedStack, Component.translatable("cadeditor.message.no_target_found", new Object[]{ModTexts.ITEM}));
     }
 
     public static void onEntityInventoryItemEditorUpdate(ServerPlayer player, EntityInventoryItemEditorPacket.Update response) {
-        ItemStack normalizedStack = normalize(response.getItemStack());
+        ItemStack updatedStack = response.getItemStack();
         if (!PermissionLogic.hasPermission(player)) {
-            CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
+            CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.errorPermissionDenied(ModTexts.ITEM));
             return;
         }
         ServerLevel level = player.level();
         if (level.getEntity(response.getEntityId()) instanceof Container container) {
         
             try {
-                container.setItem(response.getSlot(), normalizedStack.copy());
+                container.setItem(response.getSlot(), updatedStack.copy());
                 container.setChanged();
-                CommonUtil.showItemUpdateSuccess(player, normalizedStack);
+                CommonUtil.showItemUpdateSuccess(player, updatedStack);
                 if (player.containerMenu != null) {
                     player.containerMenu.broadcastChanges();
                 }
                 return;
             } catch (Exception e) {
                 LOGGER.error("Failed to update entity inventory for entity {} (slot {})", response.getEntityId(), response.getSlot(), e);
-                CommonUtil.showItemUpdateFailure(player, normalizedStack, ModTexts.Messages.ERROR_GENERIC);
+                CommonUtil.showItemUpdateFailure(player, updatedStack, ModTexts.Messages.ERROR_GENERIC);
                 return;
             }
         }
-        CommonUtil.showItemUpdateFailure(player, normalizedStack, Component.translatable("cadeditor.message.no_target_found", new Object[]{ModTexts.ITEM}));
+        CommonUtil.showItemUpdateFailure(player, updatedStack, Component.translatable("cadeditor.message.no_target_found", new Object[]{ModTexts.ITEM}));
     }
 
     public static void onBlockEditorUpdate(ServerPlayer player, BlockEditorPacket.Update update) {
@@ -370,14 +370,6 @@ public final class ServerEditorUpdateLogic {
         } catch (Exception ex) {
             LOGGER.warn("Failed to diff stacks for {}", player.getName().getString(), ex);
         }
-    }
-
-    private static ItemStack normalize(ItemStack input) {
-        if (input.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-        NbtOps ops = NbtOps.INSTANCE;
-        return (ItemStack) ItemStack.CODEC.encodeStart(ops, input).result().flatMap(data -> ItemStack.CODEC.parse(ops, data).result()).orElse(input.copy());
     }
 
     private static boolean areStacksEquivalent(ItemStack a, ItemStack b) {
