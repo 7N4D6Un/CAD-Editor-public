@@ -10,6 +10,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EnumEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.SpacerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.FoodEffectEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.SoundEventSelectionEntryModel;
@@ -96,6 +97,7 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
         entries.add(this.playSoundEntry);
         entries.add(new BooleanEntryModel(this, ModTexts.gui("consumable_teleport_randomly"), this.state.isTeleportRandomlyEnabled(), this.state::setTeleportRandomlyEnabled));
         entries.add(new FloatEntryModel(this, ModTexts.gui("consumable_teleport_diameter"), this.state.getTeleportDiameter(), this.state::setTeleportDiameter));
+        entries.add(new SpacerEntryModel(this));
         this.state.getEffects().forEach(effect -> {
             getEntries().add(createFoodEffectEntry(effect));
         });
@@ -115,7 +117,17 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
 
     @Override
     public int getEntryListStart() {
-        return 11;
+        List<EntryModel> entries = getEntries();
+        for (int i = 0; i < entries.size(); i++) {
+            EntryModel entry = entries.get(i);
+            if (entry instanceof FoodEffectEntryModel) {
+                return i;
+            }
+            if (entry instanceof SpacerEntryModel) {
+                return i + 1;
+            }
+        }
+        return -1;
     }
 
     @Override
