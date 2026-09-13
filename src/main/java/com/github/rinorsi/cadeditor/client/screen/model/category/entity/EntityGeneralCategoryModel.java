@@ -13,7 +13,6 @@ import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.entity.player.Player;
 
@@ -21,10 +20,6 @@ import java.util.UUID;
 
 public class EntityGeneralCategoryModel extends EntityCategoryModel {
     private static final String HEALTH_TAG = "Health";
-    private static final String ATTRIBUTES_TAG = "attributes";
-    private static final String ATTRIBUTE_ID_TAG = "id";
-    private static final String ATTRIBUTE_BASE_TAG = "base";
-    private static final String MAX_HEALTH_ATTRIBUTE_ID = "minecraft:max_health";
 
     public EntityGeneralCategoryModel(EntityEditorModel model) {
         super(ModTexts.GENERAL, model);
@@ -111,31 +106,6 @@ public class EntityGeneralCategoryModel extends EntityCategoryModel {
 
     private void setHealth(float health) {
         getData().putFloat(HEALTH_TAG, health);
-        updateMaxHealthAttribute(health);
-    }
-
-    private void updateMaxHealthAttribute(float health) {
-        CompoundTag data = getData();
-        ListTag attributes = data.getList(ATTRIBUTES_TAG).orElseGet(ListTag::new);
-
-        CompoundTag maxHealthAttribute = null;
-        for (int i = 0; i < attributes.size(); i++) {
-            CompoundTag attribute = attributes.getCompound(i).orElse(null);
-            if (attribute == null) continue;
-            if (MAX_HEALTH_ATTRIBUTE_ID.equals(attribute.getString(ATTRIBUTE_ID_TAG).orElse(""))) {
-                maxHealthAttribute = attribute;
-                break;
-            }
-        }
-
-        if (maxHealthAttribute == null) {
-            maxHealthAttribute = new CompoundTag();
-            maxHealthAttribute.putString(ATTRIBUTE_ID_TAG, MAX_HEALTH_ATTRIBUTE_ID);
-            attributes.add(maxHealthAttribute);
-        }
-
-        maxHealthAttribute.putDouble(ATTRIBUTE_BASE_TAG, health);
-        data.put(ATTRIBUTES_TAG, attributes);
     }
 
 }

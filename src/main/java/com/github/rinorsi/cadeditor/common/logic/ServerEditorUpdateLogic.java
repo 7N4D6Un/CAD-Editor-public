@@ -52,7 +52,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
@@ -390,12 +389,7 @@ public final class ServerEditorUpdateLogic {
     }
 
     private static void applyRequestedHealth(LivingEntity livingEntity, float requestedHealth) {
-        float sanitized = requestedHealth <= 0.0f ? 1.0E-4f : requestedHealth;
-        AttributeInstance maxHealth = livingEntity.getAttribute(Attributes.MAX_HEALTH);
-        if (maxHealth != null) {
-            maxHealth.setBaseValue(sanitized);
-        }
-        livingEntity.setHealth(Math.min(sanitized, livingEntity.getMaxHealth()));
+        livingEntity.setHealth(requestedHealth);
     }
 
     private static void applyRequestedAttributes(LivingEntity livingEntity, CompoundTag updateTag) {
