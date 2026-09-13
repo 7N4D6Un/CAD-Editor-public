@@ -462,7 +462,7 @@ public final class ModTexts {
     public static class Messages {
         public static final MutableComponent ERROR_GENERIC = prefixed(GuapiHelper.translated("cadeditor.message.error_generic")).withStyle(ChatFormatting.RED);
         public static final MutableComponent ITEM_PARSE_FAILED = prefixed(GuapiHelper.translated("cadeditor.message.item_parse_failed")).withStyle(ChatFormatting.RED);
-        public static final MutableComponent NO_BLOCK_DATA = prefixed(GuapiHelper.translated("cadeditor.message.no_block_data")).withStyle(ChatFormatting.RED);
+        public static final MutableComponent NO_DATA = prefixed(GuapiHelper.translated("cadeditor.message.no_data")).withStyle(ChatFormatting.RED);
         public static final MutableComponent VAULT_ITEM_GIVE_SUCCESS = prefixed(GuapiHelper.translated("cadeditor.message.vault_item_give_success")).withStyle(ChatFormatting.GREEN);
         public static final MutableComponent VAULT_ITEM_GIVE_FULL = prefixed(GuapiHelper.translated("cadeditor.message.vault_item_give_full")).withStyle(ChatFormatting.RED);
 

@@ -753,7 +753,7 @@
   "cadeditor.message.error_server_mod_block": "CAD Editor must also be installed on the server to edit blocks.",
   "cadeditor.message.error_server_mod_vault": "CAD Editor must also be installed on the server to use the vault.",
   "cadeditor.message.error_server_mod_creative_hint": "CAD Editor must also be installed on the server to save changes - switch to Creative Mode to temporarily edit held items.",
-  "cadeditor.message.no_block_data": "No data found for this block.",
+  "cadeditor.message.no_data": "No data found for this block or entity.",
   "cadeditor.message.no_target_found": "No editable %s found.",
   "cadeditor.message.not_implemented": "%s is not supported yet and will be added in a future version.",
   "cadeditor.message.not_saved_vault": "%s already exists in the Vault.",

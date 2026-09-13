@@ -214,8 +214,8 @@ public final class ServerEditorUpdateLogic {
             return;
         }
         ServerLevel level = player.level();
-        if (level.getEntity(update.getEntityId()) instanceof LivingEntity entity) {
-        
+        Entity entity = level.getEntity(update.getEntityId());
+        if (entity != null) {
             try {
                 boolean passengersDefined = false;
                 ListTag requestedPassengers = null;
@@ -228,8 +228,7 @@ public final class ServerEditorUpdateLogic {
                     }
                 }
                 float requestedHealth = update.getTag() == null ? Float.NaN : update.getTag().getFloatOr("Health", Float.NaN);
-                if (entity instanceof LivingEntity) {
-                    LivingEntity livingBefore = entity;
+                if (entity instanceof LivingEntity livingBefore) {
                     logLivingEntityState("before_load", livingBefore, requestedHealth);
                 }
                 ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, player.level().registryAccess(), update.getTag());
@@ -243,8 +242,7 @@ public final class ServerEditorUpdateLogic {
                         }
                     }
                 }
-                if (entity instanceof LivingEntity) {
-                    LivingEntity livingAfterLoad = entity;
+                if (entity instanceof LivingEntity livingAfterLoad) {
                     applyRequestedAttributes(livingAfterLoad, update.getTag());
                     logLivingEntityState("after_load", livingAfterLoad, requestedHealth);
                     if (!Float.isNaN(requestedHealth)) {
@@ -269,8 +267,7 @@ public final class ServerEditorUpdateLogic {
                 } catch (Exception e) {
                     LOGGER.warn("Failed to send entity data packet for entity {}", entity.getId(), e);
                 }
-                if (entity instanceof LivingEntity) {
-                    LivingEntity livingEntity = entity;
+                if (entity instanceof LivingEntity livingEntity) {
                     try {
                         ClientboundUpdateAttributesPacket attributesPacket = new ClientboundUpdateAttributesPacket(entity.getId(), livingEntity.getAttributes().getSyncableAttributes());
                         if (entity.level() instanceof ServerLevel serverLevel) {
@@ -285,7 +282,7 @@ public final class ServerEditorUpdateLogic {
                         LOGGER.warn("Failed to send attributes packet for entity {}", entity.getId(), e);
                     }
                 }
-                logLivingEntityState("after_packets", entity instanceof LivingEntity ? entity : null, requestedHealth);
+                logLivingEntityState("after_packets", entity instanceof LivingEntity ? (LivingEntity) entity : null, requestedHealth);
                 CommonUtil.showUpdateSuccess(player, ModTexts.ENTITY);
                 return;
             } catch (Exception e) {

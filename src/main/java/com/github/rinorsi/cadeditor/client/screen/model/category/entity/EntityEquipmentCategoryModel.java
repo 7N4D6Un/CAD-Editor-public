@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.animal.equine.AbstractHorse;
 import net.minecraft.world.entity.animal.happyghast.HappyGhast;
@@ -98,10 +99,9 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
         if (slot.legacyIndex >= list.size()) {
             return slot.defaultDropChance;
         }
-        FloatTag floatTag = (FloatTag) list.get(slot.legacyIndex);
-        if (floatTag instanceof FloatTag) {
-            FloatTag checkedFloatTag = floatTag;
-            return checkedFloatTag.floatValue();
+        Tag tag = list.get(slot.legacyIndex);
+        if (tag instanceof FloatTag floatTag) {
+            return floatTag.floatValue();
         }
         return slot.defaultDropChance;
     }

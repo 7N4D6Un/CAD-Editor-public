@@ -395,9 +395,9 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
             this.shearingSoundId = "";
             this.assetId = "";
             this.cameraOverlayId = "";
-            this.dispensable = false;
-            this.swappable = false;
-            this.damageOnHurt = false;
+            this.dispensable = true;
+            this.swappable = true;
+            this.damageOnHurt = true;
             this.equipOnInteract = false;
             this.canBeSheared = false;
             this.allowedEntitiesRaw = "";

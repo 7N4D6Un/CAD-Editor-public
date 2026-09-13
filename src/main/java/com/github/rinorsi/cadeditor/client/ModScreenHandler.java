@@ -144,14 +144,12 @@ public final class ModScreenHandler {
         Node nodeMvc;
         EditorType resolvedEditorType = editorType;
         if (resolvedEditorType != EditorType.STANDARD && context.getTag() == null) {
-            if (context instanceof BlockEditorContext) {
-                BlockEditorContext blockContext = (BlockEditorContext) context;
-                if (!blockContext.getBlockState().hasBlockEntity()) {
-                    resolvedEditorType = EditorType.STANDARD;
-                }
+            if (context instanceof BlockEditorContext blockContext && !blockContext.getBlockState().hasBlockEntity()) {
+                resolvedEditorType = EditorType.STANDARD;
+            } else {
+                ClientUtil.showMessage(ModTexts.Messages.NO_DATA);
+                return;
             }
-            ClientUtil.showMessage(ModTexts.Messages.NO_BLOCK_DATA);
-            return;
         }
         switch (resolvedEditorType) {
             case STANDARD:

@@ -30,8 +30,9 @@ public class NBTEditorController extends AbstractController<NBTEditorModel, NBTE
     }
 
     
-    @Override 
+    @Override
     public void bind() {
+        EditorController.super.bind();
         ((NBTEditorView) this.view).addOpenEditorButton(() -> {
             ((NBTEditorModel) this.model).changeEditor(EditorType.STANDARD);
         });
