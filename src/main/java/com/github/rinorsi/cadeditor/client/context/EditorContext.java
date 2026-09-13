@@ -59,7 +59,7 @@ public abstract class EditorContext<T extends EditorContext<T>> {
         }
     }
 
-    private boolean isUnchanged() {
+    protected boolean isUnchanged() {
         return originalTag != null && originalTag.equals(getTag());
     }
 

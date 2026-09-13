@@ -17,16 +17,23 @@ import java.util.function.Consumer;
 
 public class BlockEditorContext extends EditorContext<BlockEditorContext> {
     private BlockState blockState;
+    private final BlockState originalBlockState;
     private final BlockEntity blockEntity;
 
     public BlockEditorContext(BlockState blockState, CompoundTag tag, Component errorTooltip, Consumer<BlockEditorContext> action) {
         super(tag, errorTooltip, false, action);
         this.blockState = blockState;
+        this.originalBlockState = blockState;
         this.blockEntity = tag == null ? null : BlockEntity.loadStatic(BlockPos.ZERO, blockState, tag, ClientUtil.registryAccess());
     }
 
     public BlockState getBlockState() {
         return blockState;
+    }
+
+    @Override
+    protected boolean isUnchanged() {
+        return super.isUnchanged() && (originalBlockState == null || originalBlockState.equals(this.blockState));
     }
 
     public <T extends Comparable<T>> void updateBlockState(Property<T> property, T value) {
