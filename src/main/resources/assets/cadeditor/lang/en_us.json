@@ -600,7 +600,7 @@
   "cadeditor.banner_pattern.guster": "Guster",
   "cadeditor.banner_pattern.field_masoned": "Field Masoned",
   "cadeditor.banner_pattern.bordure_indented": "Bordure Indented",
-  "cadeditor.gui.strikethough": "Strikethrough",
+  "cadeditor.gui.strikethrough": "Strikethrough",
   "cadeditor.gui.switch_nbt_editor": "Switch to Raw Data Editor",
   "cadeditor.gui.team": "Team",
   "cadeditor.gui.theme": "Theme",

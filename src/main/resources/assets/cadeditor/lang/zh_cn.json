@@ -582,7 +582,7 @@
   "cadeditor.banner_pattern.guster": "涡流",
   "cadeditor.banner_pattern.field_masoned": "砖纹",
   "cadeditor.banner_pattern.bordure_indented": "波纹边",
-  "cadeditor.gui.strikethough": "删除线",
+  "cadeditor.gui.strikethrough": "删除线",
   "cadeditor.gui.switch_nbt_editor": "切换到原始数据编辑器",
   "cadeditor.gui.team": "队伍",
   "cadeditor.gui.theme": "主题",
