@@ -30,7 +30,6 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -84,25 +83,7 @@ public final class ClientEditorRequestLogic {
         if (!(Minecraft.getInstance().hitResult instanceof EntityHitResult entityHitResult)) {
             return null;
         }
-        Entity direct = entityHitResult.getEntity();
-        if (direct == null) {
-            return null;
-        }
-        Entity villagerPassenger = findFirstVillagerPassenger(direct);
-        return villagerPassenger != null ? villagerPassenger : direct;
-    }
-
-    private static Entity findFirstVillagerPassenger(Entity root) {
-        for (Entity passenger : root.getPassengers()) {
-            if (passenger instanceof AbstractVillager) {
-                return passenger;
-            }
-            Entity nested = findFirstVillagerPassenger(passenger);
-            if (nested != null) {
-                return nested;
-            }
-        }
-        return null;
+        return entityHitResult.getEntity();
     }
 
     public static boolean requestBlockEditor(EditorType editorType) {
