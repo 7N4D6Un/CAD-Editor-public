@@ -48,7 +48,7 @@ public final class ClientEditorResponseLogic {
         DebugLog.infoKey("cadeditor.debug.response.block", response.getBlockPos(), response.hasPermission());
         ModScreenHandler.openEditor(response.getEditorType(), new BlockEditorContext(response.getBlockState(), response.getTag(),
                 getErrorTooltip(response.hasPermission(), ModTexts.BLOCK),
-                context -> ClientEditorUpdateLogic.updateBlock(response, context)));
+                context -> ClientEditorUpdateLogic.updateBlock(response, context), response.getBlockPos()));
         notifyPermission(response.hasPermission(), ModTexts.BLOCK);
     }
 

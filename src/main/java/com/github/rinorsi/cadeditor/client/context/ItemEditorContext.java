@@ -233,7 +233,12 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         StringJoiner joiner = new StringJoiner(", ", "[", "]");
         boolean hasEntry = false;
         for (String key : keys) {
-            if (!key.startsWith("!") && (value = normalized.get(key)) != null && value.getId() != 0) {
+            if (key.startsWith("!")) {
+                joiner.add(key);
+                hasEntry = true;
+                continue;
+            }
+            if ((value = normalized.get(key)) != null && value.getId() != 0) {
                 String rendered = formatTagValue(key, value, formatContext);
                 if (!rendered.isEmpty()) {
                     joiner.add(key + "=" + rendered);
@@ -396,10 +401,10 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
     private static String formatTagValue(String key, Tag tag, GiveFormatContext formatContext) {
         return switch (tag.getId()) {
             case 1 -> formatByte(key, ((NumericTag) tag).byteValue());
-            case 2 -> Integer.toString(((NumericTag) tag).shortValue());
+            case 2 -> ((NumericTag) tag).shortValue() + "s";
             case 3 -> Integer.toString(((NumericTag) tag).intValue());
-            case 4 -> Long.toString(((NumericTag) tag).longValue());
-            case 5 -> formatFloating(((NumericTag) tag).floatValue(), formatContext);
+            case 4 -> ((NumericTag) tag).longValue() + "L";
+            case 5 -> formatFloating(((NumericTag) tag).floatValue(), formatContext) + "f";
             case 6 -> formatFloating(((NumericTag) tag).doubleValue(), formatContext);
             case 7, 11, 12 -> tag.toString();
             case 8 -> formatString(((StringTag) tag).asString().orElse(""));
@@ -446,7 +451,7 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         if (isBooleanKey(key) && (value == 0 || value == 1)) {
             return value == 1 ? "true" : "false";
         }
-        return Byte.toString(value);
+        return value + "b";
     }
 
     private static boolean isBooleanKey(String key) {

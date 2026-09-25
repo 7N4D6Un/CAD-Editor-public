@@ -13,18 +13,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class BlockEditorContext extends EditorContext<BlockEditorContext> {
     private BlockState blockState;
     private final BlockState originalBlockState;
     private final BlockEntity blockEntity;
+    private final BlockPos pos;
 
-    public BlockEditorContext(BlockState blockState, CompoundTag tag, Component errorTooltip, Consumer<BlockEditorContext> action) {
+    public BlockEditorContext(BlockState blockState, CompoundTag tag, Component errorTooltip, Consumer<BlockEditorContext> action, BlockPos pos) {
         super(tag, errorTooltip, false, action);
         this.blockState = blockState;
         this.originalBlockState = blockState;
         this.blockEntity = tag == null ? null : BlockEntity.loadStatic(BlockPos.ZERO, blockState, tag, ClientUtil.registryAccess());
+        this.pos = pos;
     }
 
     public BlockState getBlockState() {
@@ -57,8 +60,36 @@ public class BlockEditorContext extends EditorContext<BlockEditorContext> {
     @Override
     protected String getCommand() {
         String blockStateStr = getBlockState().toString();
+        String tagStr = getTag() == null ? "" : getTag().toString();
         return String.format("/setblock ~ ~ ~ %s%s%s replace", BuiltInRegistries.BLOCK.getKey(getBlockState().getBlock()),
-                getBlockState().getProperties().isEmpty() ? "" : blockStateStr.substring(blockStateStr.indexOf("[")), getTag());
+                getBlockState().getProperties().isEmpty() ? "" : blockStateStr.substring(blockStateStr.indexOf("[")), tagStr);
+    }
+
+    @Override
+    protected void applyVanillaCommand() {
+        if (pos == null) {
+            return;
+        }
+        String posStr = String.format("%d %d %d", pos.getX(), pos.getY(), pos.getZ());
+        boolean stateChanged = originalBlockState != null && !originalBlockState.equals(this.blockState);
+        if (stateChanged) {
+            sendVanillaCommand(buildSetBlockCommand(posStr));
+            return;
+        }
+        for (String key : findRemovedKeys(Set.of())) {
+            sendVanillaCommand(String.format("/data remove block %s %s", posStr, quoteKey(key)));
+        }
+        CompoundTag changedTag = buildChangedTag(Set.of());
+        if (!changedTag.isEmpty()) {
+            sendVanillaCommand(String.format("/data merge block %s %s", posStr, changedTag));
+        }
+    }
+
+    private String buildSetBlockCommand(String posStr) {
+        String blockStateStr = getBlockState().toString();
+        String statePart = getBlockState().getProperties().isEmpty() ? "" : blockStateStr.substring(blockStateStr.indexOf("["));
+        String tagStr = getTag() == null ? "" : getTag().toString();
+        return String.format("/setblock %s %s%s%s replace", posStr, BuiltInRegistries.BLOCK.getKey(getBlockState().getBlock()), statePart, tagStr);
     }
 
     @Override

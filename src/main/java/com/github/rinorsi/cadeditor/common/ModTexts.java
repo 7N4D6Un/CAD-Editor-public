@@ -206,6 +206,10 @@ public final class ModTexts {
     public static final MutableComponent OPEN_NBT_EDITOR = GuapiHelper.translated("cadeditor.key.nbt_editor");
     public static final MutableComponent OPEN_SNBT_EDITOR = GuapiHelper.translated("cadeditor.key.snbt_editor");
     public static final MutableComponent COPY_COMMAND_GREEN = GuapiHelper.translated("cadeditor.gui.copy_command_alt").withStyle(ChatFormatting.GREEN);
+    public static final MutableComponent APPLY_VANILLA_COMMAND = GuapiHelper.translated("cadeditor.gui.apply_vanilla_command");
+    public static final MutableComponent APPLY_VANILLA_COMMAND_ACTIVE = GuapiHelper.translated("cadeditor.gui.apply_vanilla_command_active");
+    public static final MutableComponent APPLY_VANILLA_COMMAND_WARNING = GuapiHelper.translated("cadeditor.gui.apply_vanilla_command_warning");
+    public static final MutableComponent APPLY_VANILLA_COMMAND_GREEN = GuapiHelper.translated("cadeditor.gui.apply_vanilla_command_alt").withStyle(ChatFormatting.GREEN);
     public static final MutableComponent FORMAT = GuapiHelper.translated("cadeditor.gui.format");
     public static final MutableComponent TOOL = GuapiHelper.translated("cadeditor.gui.tool");
     public static final MutableComponent TOOL_MINING_SPEED = GuapiHelper.translated("cadeditor.gui.tool_default_speed");

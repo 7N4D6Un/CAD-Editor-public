@@ -5,9 +5,11 @@ import com.github.rinorsi.cadeditor.client.ClientContext;
 import com.github.rinorsi.cadeditor.client.ClientEventHandler;
 import com.github.rinorsi.cadeditor.client.ClientInit;
 import com.github.rinorsi.cadeditor.client.KeyBindings;
+import com.github.rinorsi.cadeditor.client.logic.ClientVanillaDataFetcher;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
@@ -25,10 +27,12 @@ public final class FabricCADEditorModClient implements ClientModInitializer {
         KeyMappingHelper.registerKeyMapping(KeyBindings.getSNBTEditorKey());
         KeyMappingHelper.registerKeyMapping(KeyBindings.getVaultKey());
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            ClientVanillaDataFetcher.tick();
             if (client.player != null && client.gui.screen() == null) {
                 ClientEventHandler.onKeyInput();
             }
         });
+        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> !ClientVanillaDataFetcher.onGameMessage(message));
         ClientPlayConnectionEvents.INIT.register((handler, client) -> {
             ClientCache.invalidate();
             ClientContext.setModInstalledOnServer(false);
@@ -36,6 +40,7 @@ public final class FabricCADEditorModClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             ClientCache.invalidate();
             ClientContext.setModInstalledOnServer(false);
+            ClientVanillaDataFetcher.clear();
         });
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
             registerContainerScreenKeyHandler(screen);

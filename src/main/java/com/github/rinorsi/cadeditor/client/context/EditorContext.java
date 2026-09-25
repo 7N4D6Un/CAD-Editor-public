@@ -4,11 +4,15 @@ import com.github.rinorsi.cadeditor.client.ClientCache;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public abstract class EditorContext<T extends EditorContext<T>> {
@@ -19,6 +23,7 @@ public abstract class EditorContext<T extends EditorContext<T>> {
     private boolean isSaveToVault = false;
 
     private boolean isCopyCommand = false;
+    private boolean isApplyVanillaCommand = false;
     private final Consumer<T> action;
 
     public EditorContext(CompoundTag tag, Component errorTooltip, boolean canSaveToVault, Consumer<T> action) {
@@ -54,6 +59,9 @@ public abstract class EditorContext<T extends EditorContext<T>> {
             Minecraft.getInstance().keyboardHandler.setClipboard(getCommand());
             ClientUtil.showMessage(getCopySuccessMessage());
         }
+        if (isApplyVanillaCommand()) {
+            applyVanillaCommand();
+        }
         if (hasPermission() && action != null && !isUnchanged()) {
             action.accept((T) this);
         }
@@ -81,6 +89,62 @@ public abstract class EditorContext<T extends EditorContext<T>> {
 
     public void setCopyCommand(boolean copyCommand) {
         isCopyCommand = copyCommand;
+    }
+
+    public boolean isApplyVanillaCommand() {
+        return isApplyVanillaCommand;
+    }
+
+    public void setApplyVanillaCommand(boolean applyVanillaCommand) {
+        isApplyVanillaCommand = applyVanillaCommand;
+    }
+
+    protected void applyVanillaCommand() {
+    }
+
+    protected CompoundTag buildChangedTag(Set<String> excludedKeys) {
+        CompoundTag changed = new CompoundTag();
+        CompoundTag current = getTag();
+        if (current == null) {
+            return changed;
+        }
+        for (String key : current.keySet()) {
+            if (excludedKeys.contains(key)) {
+                continue;
+            }
+            Tag value = current.get(key);
+            Tag originalValue = originalTag == null ? null : originalTag.get(key);
+            if (originalValue == null || !originalValue.equals(value)) {
+                changed.put(key, value);
+            }
+        }
+        return changed;
+    }
+
+    protected List<String> findRemovedKeys(Set<String> excludedKeys) {
+        List<String> removed = new ArrayList<>();
+        CompoundTag current = getTag();
+        if (originalTag == null || current == null) {
+            return removed;
+        }
+        for (String key : originalTag.keySet()) {
+            if (!excludedKeys.contains(key) && !current.contains(key)) {
+                removed.add(key);
+            }
+        }
+        return removed;
+    }
+
+    protected static String quoteKey(String key) {
+        return "\"" + key.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+    }
+
+    protected void sendVanillaCommand(String command) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return;
+        }
+        connection.sendCommand(command.startsWith("/") ? command.substring(1) : command);
     }
 
     public void saveToVault() {

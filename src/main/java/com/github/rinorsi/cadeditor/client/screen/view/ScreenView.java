@@ -32,6 +32,7 @@ public abstract class ScreenView implements View {
     private VBox root;
     private Label headerLabel;
     private TexturedToggleButton copyCommandButton;
+    private TexturedToggleButton applyVanillaCommandButton;
     private TexturedToggleButton saveVaultButton;
     private TexturedButton loadVaultButton;
     private TexturedButton openEditorButton;
@@ -150,6 +151,10 @@ public abstract class ScreenView implements View {
         return this.copyCommandButton;
     }
 
+    public TexturedToggleButton getApplyVanillaCommandButton() {
+        return this.applyVanillaCommandButton;
+    }
+
     public TexturedToggleButton getSaveVaultButton() {
         return this.saveVaultButton;
     }
@@ -221,5 +226,14 @@ public abstract class ScreenView implements View {
             this.copyCommandButton.getTooltip().setAll(this.copyCommandButton.isActive() ? Arrays.asList(ModTexts.commandCopied(copiedText)) : Collections.singletonList(copyText));
         });
         children.add(this.copyCommandButton);
+    }
+
+    public void addApplyVanillaCommandButton(MutableComponent tooltipText, MutableComponent activeTooltipText, MutableComponent warningText) {
+        ObservableList<Node> children = this.editorButtons.getChildren();
+        this.applyVanillaCommandButton = (TexturedToggleButton) ((TexturedToggleButtonBuilder) GuapiHelper.texturedToggleButton(ModTextures.COPY_COMMAND, 16, 16, false).tooltip(tooltipText)).action(() -> {
+            this.applyVanillaCommandButton.getTooltip().setAll(this.applyVanillaCommandButton.isActive() ? Arrays.asList(activeTooltipText, warningText) : Arrays.asList(tooltipText, warningText));
+        });
+        this.applyVanillaCommandButton.getTooltip().setAll(Arrays.asList(tooltipText, warningText));
+        children.add(this.applyVanillaCommandButton);
     }
 }

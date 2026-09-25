@@ -5,11 +5,15 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -22,14 +26,17 @@ import org.apache.logging.log4j.Logger;
 
 
 public class EntityEditorContext extends EditorContext<EntityEditorContext> {
+    private static final Set<String> MERGE_EXCLUDED_KEYS = Set.of("UUID", "Pos", "Motion");
     private static final Logger LOGGER = LogManager.getLogger();
     private Entity entity;
     private final int originalEntityId;
+    private final UUID originalUuid;
 
     public EntityEditorContext(CompoundTag tag, Component errorTooltip, boolean canSaveToVault, Consumer<EntityEditorContext> action) {
         super(tag, errorTooltip, canSaveToVault, action);
         this.entity = createEntity(tag);
         this.originalEntityId = tag.getInt("UUID").orElse(-1);
+        this.originalUuid = parseUuid(tag);
         if (this.entity == null) {
             this.canSaveToVault = false;
         }
@@ -39,9 +46,21 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
         super(tag, errorTooltip, canSaveToVault, action);
         this.entity = createEntity(tag);
         this.originalEntityId = entityId;
+        this.originalUuid = parseUuid(tag);
         if (this.entity == null) {
             this.canSaveToVault = false;
         }
+    }
+
+    private static UUID parseUuid(CompoundTag tag) {
+        if (tag == null) {
+            return null;
+        }
+        int[] array = tag.getIntArray("UUID").orElse(null);
+        if (array == null || array.length != 4) {
+            return null;
+        }
+        return UUIDUtil.uuidFromIntArray(array);
     }
 
     @Override 
@@ -108,9 +127,24 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
         return "/summon";
     }
 
-    @Override 
+    @Override
     protected String getCommand() {
         return String.format("/summon %s ~ ~ ~ %s", getTag().getString("id").orElse(""), getSimpleTag());
+    }
+
+    @Override
+    protected void applyVanillaCommand() {
+        if (originalUuid == null) {
+            LOGGER.warn("[EntityEditorContext] No original UUID, cannot apply changes with vanilla command");
+            return;
+        }
+        for (String key : findRemovedKeys(MERGE_EXCLUDED_KEYS)) {
+            sendVanillaCommand(String.format("/data remove entity %s %s", originalUuid, quoteKey(key)));
+        }
+        CompoundTag changedTag = buildChangedTag(MERGE_EXCLUDED_KEYS);
+        if (!changedTag.isEmpty()) {
+            sendVanillaCommand(String.format("/data merge entity %s %s", originalUuid, changedTag));
+        }
     }
 
     @Override 
@@ -161,10 +195,24 @@ public class EntityEditorContext extends EditorContext<EntityEditorContext> {
 
     private CompoundTag getSimpleTag() {
         CompoundTag tag = getTag().copy();
+        stripTransientData(tag);
+        return tag;
+    }
+
+    private static void stripTransientData(CompoundTag tag) {
         tag.remove("UUID");
         tag.remove("Pos");
         tag.remove("Rotation");
-        return tag;
+        tag.remove("Motion");
+        if (tag.contains("Passengers")) {
+            tag.getList("Passengers").ifPresent(passengers -> {
+                for (Tag passenger : passengers) {
+                    if (passenger instanceof CompoundTag passengerTag) {
+                        stripTransientData(passengerTag);
+                    }
+                }
+            });
+        }
     }
 
     private Entity createEntity(CompoundTag tag) {

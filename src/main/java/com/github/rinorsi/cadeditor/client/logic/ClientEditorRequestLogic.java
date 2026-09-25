@@ -30,12 +30,14 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Leashable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -66,17 +68,46 @@ public final class ClientEditorRequestLogic {
                 return true;
             }
             TagValueOutput writer = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, ClientUtil.registryAccess());
-            if (!entity.save(writer)) {
-                entity.saveWithoutId(writer);
-                writer.putString("id", EntityType.getKey(entity.getType()).toString());
+            Leashable.LeashData pendingLeashData = null;
+            if (entity instanceof Leashable leashable) {
+                Leashable.LeashData leashData = leashable.getLeashData();
+                if (leashData != null && leashData.leashHolder == null && leashData.delayedLeashInfo == null) {
+                    pendingLeashData = leashData;
+                    leashable.setLeashData(null);
+                }
+            }
+            try {
+                if (!entity.save(writer)) {
+                    entity.saveWithoutId(writer);
+                    writer.putString("id", EntityType.getKey(entity.getType()).toString());
+                }
+            } finally {
+                if (pendingLeashData != null) {
+                    ((Leashable) entity).setLeashData(pendingLeashData);
+                }
             }
             CompoundTag tag = writer.buildResult();
+            if (entity.isCurrentlyGlowing()) {
+                tag.putBoolean("Glowing", true);
+            }
             DebugLog.infoKey("cadeditor.debug.request.entity.local", entity.getName().getString());
+            if (hasGamemasterPermission()) {
+                if (ClientVanillaDataFetcher.hasPendingRequest()) {
+                    return true;
+                }
+                ClientVanillaDataFetcher.requestEntityData(editorType, entity, tag);
+                return true;
+            }
             ModScreenHandler.openEditor(editorType, new EntityEditorContext(tag, ModTexts.errorServerModRequiredEntity(), true, null));
             return true;
         }
         DebugLog.infoKey("cadeditor.debug.request.entity.missing", new Object[0]);
         return false;
+    }
+
+    private static boolean hasGamemasterPermission() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player != null && player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
     }
 
     private static Entity resolveEntityEditorTarget() {
@@ -104,7 +135,7 @@ public final class ClientEditorRequestLogic {
                     tag = blockEntity.saveWithFullMetadata(ClientUtil.registryAccess());
                 }
                 DebugLog.infoKey("cadeditor.debug.request.block.local", blockState.getBlock().getName().getString());
-                ModScreenHandler.openEditor(editorType, new BlockEditorContext(blockState, tag, ModTexts.errorServerModRequiredBlock(), null));
+                ModScreenHandler.openEditor(editorType, new BlockEditorContext(blockState, tag, ModTexts.errorServerModRequiredBlock(), null, blockPos));
                 return true;
             }
         }

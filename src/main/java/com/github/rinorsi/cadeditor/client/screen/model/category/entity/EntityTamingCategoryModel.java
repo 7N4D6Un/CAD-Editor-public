@@ -141,11 +141,13 @@ public class EntityTamingCategoryModel extends EntityCategoryModel {
                 removeOwnerData(data);
             }
         } else {
-            boolean tame = wantsTame && !ownerUuid.isEmpty();
-            applyTameState(data, tame);
-            if (tame) {
-                applyOwnerUuid(data, ownerUuid);
+            if (wantsTame) {
+                applyTameState(data, true);
+                if (!ownerUuid.isEmpty()) {
+                    applyOwnerUuid(data, ownerUuid);
+                }
             } else {
+                applyTameState(data, false);
                 removeOwnerData(data);
             }
         }
