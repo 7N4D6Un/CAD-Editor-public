@@ -9,12 +9,18 @@ import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 public class TextEditorOutputFormatter {
     private final MutableComponent rootText;
+    private final boolean convertTokens;
     private int currentFormattingIndex;
     private int previousTextIndex;
     private List<Formatting> currentFormattings;
 
     public TextEditorOutputFormatter(MutableComponent rootText) {
+        this(rootText, true);
+    }
+
+    public TextEditorOutputFormatter(MutableComponent rootText, boolean convertTokens) {
         this.rootText = rootText;
+        this.convertTokens = convertTokens;
     }
 
     public void format(String text, int firstCharacterIndex, List<Formatting> formattings) {
@@ -55,7 +61,28 @@ public class TextEditorOutputFormatter {
     }
 
     private void appendText(String s) {
-        MutableComponent text = text(s);
+        if (!convertTokens) {
+            appendPiece(text(s));
+            return;
+        }
+        int i = 0;
+        while (i < s.length()) {
+            int tokenLength = TextTokens.tokenLengthAt(s, i);
+            if (tokenLength > 0) {
+                String token = s.substring(i, i + tokenLength);
+                MutableComponent tokenComponent = TextTokens.buildComponent(token);
+                appendPiece(tokenComponent != null ? tokenComponent : text(token));
+                i += tokenLength;
+                continue;
+            }
+            int nextToken = TextTokens.nextTokenStart(s, i + 1);
+            int end = nextToken < 0 ? s.length() : nextToken;
+            appendPiece(text(s.substring(i, end)));
+            i = end;
+        }
+    }
+
+    private void appendPiece(MutableComponent text) {
         currentFormattings.forEach(formatting -> formatting.apply(text));
         rootText.append(text);
     }

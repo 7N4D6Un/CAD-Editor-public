@@ -1,11 +1,13 @@
 package com.github.rinorsi.cadeditor.client.screen.view;
 
+import com.github.franckyi.guapi.api.node.Button;
 import com.github.franckyi.guapi.api.node.HBox;
 import com.github.franckyi.guapi.api.node.TexturedButton;
 import com.github.rinorsi.cadeditor.client.ModTextures;
 import com.github.rinorsi.cadeditor.client.util.texteditor.StyleType;
 import com.github.rinorsi.cadeditor.client.util.texteditor.TextEditorActionHandler;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 
@@ -21,6 +23,11 @@ public class StandardEditorView extends CategoryEntryScreenView {
 
     private TexturedButton customColorButton;
     private TexturedButton chooseCustomColorButton;
+    private Button headButton;
+    private Button spriteButton;
+    private Button translationButton;
+    private Button fontButton;
+    private Button gradientButton;
     private HBox textEditorButtons;
     private Supplier<TextEditorActionHandler> textEditorSupplier;
 
@@ -57,6 +64,14 @@ public class StandardEditorView extends CategoryEntryScreenView {
                 createTextButton(StyleType.OBFUSCATED, ModTextures.TEXT_OBFUSCATED, ModTexts.OBFUSCATED)
         );
         buttonBarRight.getChildren().add(0, textEditorButtons = hBox(buttons -> {
+            buttons.add(hBox(tokens -> {
+                tokens.add(headButton = createCompactTokenButton(ModTexts.gui("text_format.head")));
+                tokens.add(spriteButton = createCompactTokenButton(ModTexts.gui("text_format.sprite")));
+                tokens.add(translationButton = createCompactTokenButton(ModTexts.gui("text_format.translation")));
+                tokens.add(fontButton = createCompactTokenButton(ModTexts.gui("text_format.font")));
+                tokens.add(gradientButton = createCompactTokenButton(ModTexts.gui("text_format.gradient")));
+                tokens.spacing(2);
+            }));
             buttons.add(hBox(middle -> {
                 styleButtons.forEach(middle::add);
                 middle.spacing(2);
@@ -76,6 +91,12 @@ public class StandardEditorView extends CategoryEntryScreenView {
             }));
             buttons.spacing(10);
         }).align(CENTER_RIGHT));
+    }
+
+    private Button createCompactTokenButton(MutableComponent label) {
+        Button b = button(label);
+        b.setPrefWidth(Math.clamp(Minecraft.getInstance().font.width(label) + 14, 30, 132));
+        return b;
     }
 
     private TexturedButton createTextButton(StyleType target, Identifier id, MutableComponent tooltipText) {
@@ -108,6 +129,26 @@ public class StandardEditorView extends CategoryEntryScreenView {
         return chooseCustomColorButton;
     }
 
+    public Button getHeadButton() {
+        return headButton;
+    }
+
+    public Button getSpriteButton() {
+        return spriteButton;
+    }
+
+    public Button getTranslationButton() {
+        return translationButton;
+    }
+
+    public Button getFontButton() {
+        return fontButton;
+    }
+
+    public Button getGradientButton() {
+        return gradientButton;
+    }
+
     public HBox getTextEditorButtons() {
         return textEditorButtons;
     }
@@ -122,6 +163,9 @@ public class StandardEditorView extends CategoryEntryScreenView {
         boolean allowStyles = hasEditor && handler.supportsStyleFormatting();
         boolean allowReset = hasEditor && handler.supportsColorReset();
         boolean allowCustomPicker = hasEditor && handler.supportsCustomColorPicker();
+        boolean allowTokens = hasEditor && handler.supportsTokenFormatting();
+        boolean allowFont = hasEditor && handler.supportsFontFormatting();
+        boolean allowGradient = hasEditor && handler.supportsGradientFormatting();
 
         styleButtons.forEach(button -> button.setDisable(!allowStyles));
 
@@ -130,5 +174,11 @@ public class StandardEditorView extends CategoryEntryScreenView {
         chooseCustomColorButton.setVisible(allowCustomPicker);
         customColorButton.setDisable(!allowColors);
         customColorButton.setVisible(allowCustomPicker);
+
+        headButton.setDisable(!allowTokens);
+        spriteButton.setDisable(!allowTokens);
+        translationButton.setDisable(!allowTokens);
+        fontButton.setDisable(!allowFont);
+        gradientButton.setDisable(!allowGradient);
     }
 }

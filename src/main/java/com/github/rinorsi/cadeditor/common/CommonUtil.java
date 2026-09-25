@@ -24,7 +24,7 @@ public class CommonUtil {
             MutableComponent msg = Component.literal("[CADE-" + date + "] ")
                     .withStyle(ChatFormatting.GOLD)
                     .append(Component.literal("物品 ").withStyle(ChatFormatting.GOLD))
-                    .append(stack.getHoverName().copy().withStyle(ChatFormatting.YELLOW))
+                    .append(stack.getStyledHoverName())
                     .append(Component.literal(" 已更新。"));
             showMessage(player, msg);
         } catch (Exception e) {
@@ -38,7 +38,7 @@ public class CommonUtil {
             MutableComponent msg = Component.literal("[CADE-" + date + "] ")
                     .withStyle(ChatFormatting.GOLD)
                     .append(Component.literal("物品 ").withStyle(ChatFormatting.GOLD))
-                    .append((stack.isEmpty() ? Component.literal("(未知)") : stack.getHoverName().copy()).withStyle(ChatFormatting.YELLOW))
+                    .append((stack.isEmpty() ? Component.literal("(未知)") : stack.getStyledHoverName()))
                     .append(Component.literal(" 更新失败："));
             if (reason != null) {
                 msg.append(reason.copy().withStyle(ChatFormatting.RED));

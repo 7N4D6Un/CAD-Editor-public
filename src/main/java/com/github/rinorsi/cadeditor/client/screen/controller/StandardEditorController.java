@@ -7,20 +7,32 @@ import com.github.rinorsi.cadeditor.client.Vault;
 import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.StandardEditorModel;
+import com.github.rinorsi.cadeditor.client.screen.model.TextFormatDialogModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.ListSelectionElementModel;
+import com.github.rinorsi.cadeditor.client.screen.model.selection.element.StringSuggestionListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultEntityListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.element.VaultItemListSelectionElementModel;
 import com.github.rinorsi.cadeditor.client.screen.view.StandardEditorView;
+import com.github.rinorsi.cadeditor.client.util.texteditor.TextEditorActionHandler;
+import com.github.rinorsi.cadeditor.client.util.texteditor.TextTokens;
 import com.github.rinorsi.cadeditor.common.EditorType;
 import com.github.rinorsi.cadeditor.common.ModTexts;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.Identifier;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 public class StandardEditorController extends CategoryEntryScreenController<StandardEditorModel, StandardEditorView> implements EditorController<StandardEditorModel, StandardEditorView> {
     public StandardEditorController(StandardEditorModel model, StandardEditorView view) {
@@ -69,6 +81,179 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
             e.consume();
             model.getActiveTextEditor().addColorFormatting(model.getTextEditorCustomColor());
         });
+        view.getHeadButton().onAction(e -> {
+            e.consume();
+            openHeadDialog();
+        });
+        view.getSpriteButton().onAction(e -> {
+            e.consume();
+            openSpriteDialog();
+        });
+        view.getTranslationButton().onAction(e -> {
+            e.consume();
+            openTranslationDialog();
+        });
+        view.getFontButton().onAction(e -> {
+            e.consume();
+            openFontSelection();
+        });
+        view.getGradientButton().onAction(e -> {
+            e.consume();
+            openGradientDialog();
+        });
+    }
+
+    private void openHeadDialog() {
+        openTextFormatDialog(ModTexts.TEXT_FORMAT_HEAD_TITLE, List.of(
+                TextFormatDialogModel.DialogField.text("player_name", ModTexts.DIALOG_PLAYER_NAME, "", List.of(
+                        new TextFormatDialogModel.DialogAction(ModTexts.DIALOG_FILL_OWN_DATA, field -> {
+                            LocalPlayer player = Minecraft.getInstance().player;
+                            if (player != null) {
+                                field.setText(player.getName().getString());
+                            }
+                        }))),
+                TextFormatDialogModel.DialogField.text("player_uuid", ModTexts.DIALOG_UUID, "", List.of(
+                        new TextFormatDialogModel.DialogAction(ModTexts.DIALOG_FILL_OWN_DATA, field -> {
+                            LocalPlayer player = Minecraft.getInstance().player;
+                            if (player != null) {
+                                field.setText(player.getUUID().toString());
+                            }
+                        }))),
+                TextFormatDialogModel.DialogField.text("texture_value", ModTexts.DIALOG_TEXTURE_VALUE, ""),
+                TextFormatDialogModel.DialogField.text("texture_signature", ModTexts.DIALOG_TEXTURE_SIGNATURE, ""),
+                TextFormatDialogModel.DialogField.checkbox("include_hat", ModTexts.DIALOG_INCLUDE_HAT, true)
+        ), values -> {
+            String textureValue = values.get("texture_value");
+            String playerName = values.get("player_name");
+            String playerUuid = values.get("player_uuid");
+            boolean hat = Boolean.parseBoolean(values.get("include_hat"));
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor == null) {
+                return;
+            }
+            if (textureValue != null && !textureValue.isBlank()) {
+                String signature = values.get("texture_signature");
+                editor.insertToken(TextTokens.buildHeadTextureToken(textureValue.trim(), signature == null ? null : signature.trim(), hat));
+                return;
+            }
+            if (playerUuid != null && !playerUuid.isBlank()) {
+                try {
+                    UUID.fromString(playerUuid.trim());
+                } catch (IllegalArgumentException e) {
+                    ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+                    return;
+                }
+                editor.insertToken(TextTokens.buildHeadUuidToken(playerUuid.trim(), hat));
+                return;
+            }
+            if (playerName != null && !playerName.isBlank()) {
+                editor.insertToken(TextTokens.buildHeadToken(playerName.trim(), hat));
+                return;
+            }
+            ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+        });
+    }
+
+    private void openSpriteDialog() {
+        openTextFormatDialog(ModTexts.TEXT_FORMAT_SPRITE_TITLE, List.of(
+                TextFormatDialogModel.DialogField.text("atlas_id", ModTexts.DIALOG_ATLAS_ID, "minecraft:blocks"),
+                TextFormatDialogModel.DialogField.text("sprite_id", ModTexts.DIALOG_SPRITE_ID, "minecraft:block/stone")
+        ), values -> {
+            String atlas = values.get("atlas_id");
+            String sprite = values.get("sprite_id");
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor == null) {
+                return;
+            }
+            if (atlas == null || atlas.isBlank() || sprite == null || sprite.isBlank()
+                    || Identifier.tryParse(atlas.trim()) == null || Identifier.tryParse(sprite.trim()) == null) {
+                ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+                return;
+            }
+            editor.insertToken(TextTokens.buildSpriteToken(atlas.trim(), sprite.trim()));
+        });
+    }
+
+    private void openTranslationDialog() {
+        openTextFormatDialog(ModTexts.TEXT_FORMAT_TRANSLATION_TITLE, List.of(
+                TextFormatDialogModel.DialogField.text("key", ModTexts.DIALOG_TRANSLATION_KEY, ""),
+                TextFormatDialogModel.DialogField.text("fallback", ModTexts.DIALOG_FALLBACK_TEXT, "")
+        ), values -> {
+            String key = values.get("key");
+            String fallback = values.get("fallback");
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor == null) {
+                return;
+            }
+            if (key == null || key.isBlank()) {
+                ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+                return;
+            }
+            editor.insertToken(TextTokens.buildTranslationToken(key.trim(), fallback == null || fallback.isBlank() ? null : fallback));
+        });
+    }
+
+    private void openGradientDialog() {
+        openTextFormatDialog(ModTexts.TEXT_FORMAT_GRADIENT_TITLE, List.of(
+                TextFormatDialogModel.DialogField.color("start_color", ModTexts.DIALOG_GRADIENT_START, ""),
+                TextFormatDialogModel.DialogField.color("middle_color", ModTexts.DIALOG_GRADIENT_MIDDLE, ""),
+                TextFormatDialogModel.DialogField.color("end_color", ModTexts.DIALOG_GRADIENT_END, ""),
+                TextFormatDialogModel.DialogField.checkbox("shadow", ModTexts.DIALOG_APPLY_TO_SHADOW, false)
+        ), values -> {
+            Integer start = parseHexColor(values.get("start_color"));
+            Integer middle = parseHexColor(values.get("middle_color"));
+            Integer end = parseHexColor(values.get("end_color"));
+            boolean shadow = Boolean.parseBoolean(values.get("shadow"));
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor == null) {
+                return;
+            }
+            if (start == null || end == null) {
+                ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+                return;
+            }
+            List<Integer> stops = new ArrayList<>();
+            stops.add(start);
+            if (middle != null) {
+                stops.add(middle);
+            }
+            stops.add(end);
+            editor.applyGradient(stops, shadow);
+        });
+    }
+
+    private void openFontSelection() {
+        List<ListSelectionElementModel> items = new ArrayList<>();
+        FileToIdConverter converter = FileToIdConverter.json("font");
+        TreeSet<String> fonts = new TreeSet<>();
+        converter.listMatchingResources(Minecraft.getInstance().getResourceManager()).keySet().stream()
+                .map(converter::fileToId)
+                .filter(id -> !id.getNamespace().equals("minecraft") || !id.getPath().startsWith("include/"))
+                .map(Identifier::toString)
+                .forEach(fonts::add);
+        fonts.add("minecraft:default");
+        fonts.forEach(font -> items.add(new StringSuggestionListSelectionElementModel(font)));
+        ModScreenHandler.openListSelectionScreen(ModTexts.TEXT_FORMAT_FONT_TITLE, null, items, font -> {
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor != null) {
+                editor.addFontFormatting(font);
+            }
+        });
+    }
+
+    private void openTextFormatDialog(MutableComponent title, List<TextFormatDialogModel.DialogField> fields, Consumer<Map<String, String>> onApply) {
+        ModScreenHandler.openTextFormatDialog(new TextFormatDialogModel(title, fields, onApply));
+    }
+
+    private static Integer parseHexColor(String value) {
+        if (value == null || value.length() != 7 || value.charAt(0) != '#') {
+            return null;
+        }
+        try {
+            return (int) (Long.parseLong(value.substring(1), 16) & 0xFFFFFF);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     private void updateCustomColor(String hex) {

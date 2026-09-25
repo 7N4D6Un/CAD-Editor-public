@@ -16,6 +16,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.EntityEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.NBTEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.SNBTEditorModel;
+import com.github.rinorsi.cadeditor.client.screen.model.TextFormatDialogModel;
 import com.github.rinorsi.cadeditor.client.screen.model.VaultScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ColorSelectionScreenModel;
 import com.github.rinorsi.cadeditor.client.screen.model.selection.ListSelectionFilter;
@@ -33,6 +34,7 @@ import com.github.rinorsi.cadeditor.client.screen.mvc.ListSelectionScreenMVC;
 import com.github.rinorsi.cadeditor.client.screen.mvc.NBTEditorMVC;
 import com.github.rinorsi.cadeditor.client.screen.mvc.SNBTEditorMVC;
 import com.github.rinorsi.cadeditor.client.screen.mvc.StandardEditorMVC;
+import com.github.rinorsi.cadeditor.client.screen.mvc.TextFormatDialogMVC;
 import com.github.rinorsi.cadeditor.client.screen.mvc.VaultScreenMVC;
 import com.github.rinorsi.cadeditor.client.util.ScreenScalingManager;
 import com.github.rinorsi.cadeditor.common.EditorType;
@@ -101,6 +103,10 @@ public final class ModScreenHandler {
 
     public static void openColorSelectionScreen(ColorSelectionScreenModel.Target target, int color, Consumer<String> action) {
         openScaledScreen(GuapiHelper.mvc(ColorSelectionScreenMVC.INSTANCE, new ColorSelectionScreenModel(target, action, color)));
+    }
+
+    public static void openTextFormatDialog(TextFormatDialogModel model) {
+        openScaledScreen(GuapiHelper.mvc(TextFormatDialogMVC.INSTANCE, model));
     }
 
     public static void openVault() {
