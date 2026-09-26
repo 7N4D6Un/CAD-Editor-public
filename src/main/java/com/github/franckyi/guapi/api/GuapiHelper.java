@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.Entity;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -170,6 +171,18 @@ public final class GuapiHelper {
 
     public static ItemViewBuilder itemView(Consumer<ItemViewBuilder> with) {
         return node().createItemView(with);
+    }
+
+    public static EntityViewBuilder entityView() {
+        return node().createEntityView();
+    }
+
+    public static EntityViewBuilder entityView(Entity entity) {
+        return node().createEntityView(entity);
+    }
+
+    public static EntityViewBuilder entityView(Consumer<EntityViewBuilder> with) {
+        return node().createEntityView(with);
     }
 
     public static LabelBuilder label() {

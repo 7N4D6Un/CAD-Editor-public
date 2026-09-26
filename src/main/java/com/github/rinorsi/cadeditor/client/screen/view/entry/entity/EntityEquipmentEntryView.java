@@ -22,6 +22,7 @@ public class EntityEquipmentEntryView extends EntryView {
     private Label slotLabel;
     private ItemView itemView;
     private Label itemNameLabel;
+    private HBox dropChanceBox;
     private TextField dropChanceField;
     private TexturedButton chooseItemButton;
     private TexturedButton loadVaultButton;
@@ -45,7 +46,7 @@ public class EntityEquipmentEntryView extends EntryView {
                 itemBox.add(nameLabel);
                 itemBox.spacing(6).align(GuapiHelper.CENTER_LEFT);
             }), 1);
-            content.add(GuapiHelper.hBox((Consumer<HBoxBuilder>) chanceBox -> {
+            content.add(dropChanceBox = GuapiHelper.hBox((Consumer<HBoxBuilder>) chanceBox -> {
                 chanceBox.add(GuapiHelper.label(ModTexts.DROP_CHANCE.copy().withStyle(ChatFormatting.GRAY)));
                 TextField textField = GuapiHelper.textField().prefWidth(60);
                 this.dropChanceField = textField;
@@ -92,6 +93,10 @@ public class EntityEquipmentEntryView extends EntryView {
 
     public TextField getDropChanceField() {
         return this.dropChanceField;
+    }
+
+    public void setDropChanceBoxVisible(boolean visible) {
+        this.dropChanceBox.setVisible(visible);
     }
 
     public TexturedButton getClearButton() {

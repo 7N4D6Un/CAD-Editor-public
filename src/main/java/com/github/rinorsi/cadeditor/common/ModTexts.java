@@ -220,6 +220,7 @@ public final class ModTexts {
     public static final MutableComponent TEXT_FORMAT_TRANSLATION_TITLE = GuapiHelper.translated("cadeditor.gui.text_format.translation_title");
     public static final MutableComponent TEXT_FORMAT_FONT_TITLE = GuapiHelper.translated("cadeditor.gui.text_format.font_title");
     public static final MutableComponent TEXT_FORMAT_GRADIENT_TITLE = GuapiHelper.translated("cadeditor.gui.text_format.gradient_title");
+    public static final MutableComponent TEXT_FORMAT_SHADOW_COLOR_TITLE = GuapiHelper.translated("cadeditor.gui.text_format.shadow_color_title");
     public static final MutableComponent TEXT_FORMAT_INVALID = GuapiHelper.translated("cadeditor.gui.text_format.invalid");
     public static final MutableComponent DIALOG_PLAYER_NAME = GuapiHelper.translated("cadeditor.gui.player_name");
     public static final MutableComponent DIALOG_UUID = GuapiHelper.translated("cadeditor.gui.uuid");
@@ -235,6 +236,7 @@ public final class ModTexts {
     public static final MutableComponent DIALOG_GRADIENT_MIDDLE = GuapiHelper.translated("cadeditor.gui.text_format.dialog.gradient_middle");
     public static final MutableComponent DIALOG_GRADIENT_END = GuapiHelper.translated("cadeditor.gui.text_format.dialog.gradient_end");
     public static final MutableComponent DIALOG_APPLY_TO_SHADOW = GuapiHelper.translated("cadeditor.gui.text_format.dialog.apply_to_shadow");
+    public static final MutableComponent DIALOG_SHADOW_COLOR = GuapiHelper.translated("cadeditor.gui.text_format.dialog.shadow_color");
     public static final MutableComponent FORMAT = GuapiHelper.translated("cadeditor.gui.format");
     public static final MutableComponent TOOL = GuapiHelper.translated("cadeditor.gui.tool");
     public static final MutableComponent TOOL_MINING_SPEED = GuapiHelper.translated("cadeditor.gui.tool_default_speed");

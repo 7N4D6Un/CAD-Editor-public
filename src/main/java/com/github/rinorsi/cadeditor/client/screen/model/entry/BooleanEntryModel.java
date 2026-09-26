@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 public class BooleanEntryModel extends ValueEntryModel<Boolean> {
     public BooleanEntryModel(CategoryModel category, MutableComponent label, boolean value, Consumer<Boolean> action) {
         super(category, label, value, action);
+        setFactoryDefault(value);
     }
 
     @Override

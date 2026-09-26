@@ -2,6 +2,7 @@ package com.github.rinorsi.cadeditor.client.screen.mvc;
 
 import com.github.franckyi.guapi.api.mvc.MVC;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.*;
+import com.github.rinorsi.cadeditor.client.screen.controller.entry.ArmorStandEquipmentEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.EntityEquipmentEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.VillagerTradeItemsEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.entity.VillagerTradeValuesEntryController;
@@ -11,6 +12,7 @@ import com.github.rinorsi.cadeditor.client.screen.controller.entry.item.MapDecor
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.vault.VaultEntityEntryController;
 import com.github.rinorsi.cadeditor.client.screen.controller.entry.vault.VaultItemEntryController;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.*;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.ArmorStandEquipmentEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.EntityEquipmentEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerTradeItemsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.VillagerTradeValuesEntryModel;
@@ -45,6 +47,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((StringWithActionsEntryModel) model, StringWithActionsEntryView::new, StringWithActionsEntryController::new);
             case NUMBER ->
                     MVC.createViewAndBind((NumberEntryModel<?>) model, NumberEntryView::new, NumberEntryController::new);
+            case SLIDER ->
+                    MVC.createViewAndBind((SliderEntryModel) model, SliderEntryView::new, SliderEntryController::new);
             case TEXT -> MVC.createViewAndBind((TextEntryModel) model, TextEntryView::new, TextEntryController::new);
             case ENUM -> createEnumViewAndBind((EnumEntryModel<?>) model);
             case ACTION ->
@@ -108,6 +112,10 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
             case VILLAGER_TRADE -> throw new IllegalStateException("Villager trade base model should not be instantiated as entry");
             case SPACER ->
                     MVC.createViewAndBind((SpacerEntryModel) model, SpacerEntryView::new, SpacerEntryController::new);
+            case ENTITY_PREVIEW ->
+                    MVC.createViewAndBind((EntityPreviewEntryModel) model, EntityPreviewEntryView::new, EntityPreviewEntryController::new);
+            case ARMOR_STAND_EQUIPMENT ->
+                    MVC.createViewAndBind((ArmorStandEquipmentEntryModel) model, EntityEquipmentEntryView::new, ArmorStandEquipmentEntryController::new);
             case BANNER_LAYER ->
                     MVC.createViewAndBind((BannerLayerEntryModel) model, StringWithActionsEntryView::new, BannerLayerEntryController::new);
         };

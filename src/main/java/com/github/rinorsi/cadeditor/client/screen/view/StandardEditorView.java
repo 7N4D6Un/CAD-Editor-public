@@ -28,6 +28,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
     private Button translationButton;
     private Button fontButton;
     private Button gradientButton;
+    private Button shadowColorButton;
     private HBox textEditorButtons;
     private Supplier<TextEditorActionHandler> textEditorSupplier;
 
@@ -70,6 +71,7 @@ public class StandardEditorView extends CategoryEntryScreenView {
                 tokens.add(translationButton = createCompactTokenButton(ModTexts.gui("text_format.translation")));
                 tokens.add(fontButton = createCompactTokenButton(ModTexts.gui("text_format.font")));
                 tokens.add(gradientButton = createCompactTokenButton(ModTexts.gui("text_format.gradient")));
+                tokens.add(shadowColorButton = createCompactTokenButton(ModTexts.gui("text_format.shadow_color")));
                 tokens.spacing(2);
             }));
             buttons.add(hBox(middle -> {
@@ -149,6 +151,10 @@ public class StandardEditorView extends CategoryEntryScreenView {
         return gradientButton;
     }
 
+    public Button getShadowColorButton() {
+        return shadowColorButton;
+    }
+
     public HBox getTextEditorButtons() {
         return textEditorButtons;
     }
@@ -180,5 +186,6 @@ public class StandardEditorView extends CategoryEntryScreenView {
         translationButton.setDisable(!allowTokens);
         fontButton.setDisable(!allowFont);
         gradientButton.setDisable(!allowGradient);
+        shadowColorButton.setDisable(!allowColors);
     }
 }

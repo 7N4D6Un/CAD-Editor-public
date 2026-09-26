@@ -26,6 +26,7 @@ public final class MonochromeTheme extends AbstractTheme {
         mirrorVanillaSkin(VBox.class);
         mirrorVanillaSkin(ImageView.class);
         mirrorVanillaSkin(ItemView.class);
+        mirrorVanillaSkin(EntityView.class);
         mirrorVanillaSkin(SpriteView.class);
     }
 

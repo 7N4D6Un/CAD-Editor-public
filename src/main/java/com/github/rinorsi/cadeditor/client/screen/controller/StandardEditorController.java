@@ -101,6 +101,10 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
             e.consume();
             openGradientDialog();
         });
+        view.getShadowColorButton().onAction(e -> {
+            e.consume();
+            openShadowColorDialog();
+        });
     }
 
     private void openHeadDialog() {
@@ -219,6 +223,23 @@ public class StandardEditorController extends CategoryEntryScreenController<Stan
             }
             stops.add(end);
             editor.applyGradient(stops, shadow);
+        });
+    }
+
+    private void openShadowColorDialog() {
+        openTextFormatDialog(ModTexts.TEXT_FORMAT_SHADOW_COLOR_TITLE, List.of(
+                TextFormatDialogModel.DialogField.color("shadow_color", ModTexts.DIALOG_SHADOW_COLOR, "")
+        ), values -> {
+            Integer color = parseHexColor(values.get("shadow_color"));
+            TextEditorActionHandler editor = model.getActiveTextEditor();
+            if (editor == null) {
+                return;
+            }
+            if (color == null) {
+                ClientUtil.showMessage(ModTexts.TEXT_FORMAT_INVALID);
+                return;
+            }
+            editor.addShadowColorFormatting((color & 0xFFFFFF) | 0xFF000000);
         });
     }
 

@@ -13,6 +13,7 @@ public final class VanillaTheme extends AbstractTheme {
         registerSkinInstance(VBox.class, VanillaVBoxSkin.INSTANCE);
         registerSkinInstance(ImageView.class, VanillaImageViewSkin.INSTANCE);
         registerSkinInstance(ItemView.class, VanillaItemViewSkin.INSTANCE);
+        registerSkinInstance(EntityView.class, VanillaEntityViewSkin.INSTANCE);
         registerSkinInstance(SpriteView.class, VanillaSpriteViewSkin.INSTANCE);
         registerSkinSupplier(Button.class, VanillaButtonSkin::new);
         registerSkinSupplier(TexturedButton.class, VanillaTexturedButtonSkin::new);

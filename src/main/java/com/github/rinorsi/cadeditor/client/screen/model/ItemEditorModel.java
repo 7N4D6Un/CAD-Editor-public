@@ -6,6 +6,7 @@ import com.github.rinorsi.cadeditor.client.debug.DebugLog;
 import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.FoodComponentState;
+import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemArmorStandCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemAttributeModifiersCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemBeehiveCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemBannerPatternCategoryModel;
@@ -248,6 +249,9 @@ public class ItemEditorModel extends StandardEditorModel {
         }
         if (item == Items.PLAYER_HEAD) {
             getCategories().add(new ItemProfileCategoryModel(this));
+        }
+        if (item == Items.ARMOR_STAND) {
+            getCategories().add(new ItemArmorStandCategoryModel(this));
         }
         boolean isContainerBlockItem = false;
         if (item instanceof BlockItem) {

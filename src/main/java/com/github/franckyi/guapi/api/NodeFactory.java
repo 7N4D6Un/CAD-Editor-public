@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.Entity;
 
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -68,6 +69,12 @@ public interface NodeFactory {
     ItemViewBuilder createItemView(ItemStack id);
 
     ItemViewBuilder createItemView(Consumer<ItemViewBuilder> with);
+
+    EntityViewBuilder createEntityView();
+
+    EntityViewBuilder createEntityView(Entity entity);
+
+    EntityViewBuilder createEntityView(Consumer<EntityViewBuilder> with);
 
     LabelBuilder createLabel();
 

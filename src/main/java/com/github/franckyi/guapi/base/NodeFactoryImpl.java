@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.Entity;
 
 import java.util.Collection;
 import java.util.function.Consumer;
@@ -158,6 +159,21 @@ public class NodeFactoryImpl implements NodeFactory {
     @Override
     public ItemViewBuilder createItemView(Consumer<ItemViewBuilder> with) {
         return createItemView().with(with);
+    }
+
+    @Override
+    public EntityViewBuilder createEntityView() {
+        return new EntityViewImpl();
+    }
+
+    @Override
+    public EntityViewBuilder createEntityView(Entity entity) {
+        return new EntityViewImpl(entity);
+    }
+
+    @Override
+    public EntityViewBuilder createEntityView(Consumer<EntityViewBuilder> with) {
+        return createEntityView().with(with);
     }
 
     @Override

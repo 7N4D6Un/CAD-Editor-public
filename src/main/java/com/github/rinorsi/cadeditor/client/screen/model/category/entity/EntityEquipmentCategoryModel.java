@@ -212,6 +212,10 @@ public class EntityEquipmentCategoryModel extends EntityCategoryModel {
             return this.hand;
         }
 
+        public String equipmentKey() {
+            return this.equipmentKey;
+        }
+
         public MutableComponent label() {
             return this.labelSupplier.get();
         }

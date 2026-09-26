@@ -3,6 +3,7 @@ package com.github.rinorsi.cadeditor.client.screen.model;
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityArmorStandCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityAttributesCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityEquipmentCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityGeneralCategoryModel;
@@ -27,6 +28,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
@@ -64,6 +66,9 @@ public class EntityEditorModel extends StandardEditorModel {
         }
         if (entity instanceof Mob) {
             getCategories().add(new EntitySpawnSettingsCategoryModel(this));
+        }
+        if (isArmorStand(entity)) {
+            getCategories().add(new EntityArmorStandCategoryModel(this));
         }
         if (isItemFrameLike(entity)) {
             getCategories().add(new EntityItemFrameCategoryModel(this));
@@ -114,6 +119,17 @@ public class EntityEditorModel extends StandardEditorModel {
             return false;
         }
         return tag.contains("Tame") || tag.contains("Owner") || tag.contains("OwnerUUID") || tag.contains("OwnerUUIDMost") || tag.contains("OwnerUUIDLeast");
+    }
+
+    private boolean isArmorStand(Entity entity) {
+        if (entity instanceof ArmorStand) {
+            return true;
+        }
+        CompoundTag tag = getContext().getTag();
+        if (tag == null) {
+            return false;
+        }
+        return "minecraft:armor_stand".equals(tag.getStringOr("id", ""));
     }
 
     private boolean isItemFrameLike(Entity entity) {
