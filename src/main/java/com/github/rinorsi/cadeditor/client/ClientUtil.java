@@ -90,7 +90,8 @@ public final class ClientUtil {
                 .orElseGet(() -> {
                     CompoundTag tag = new CompoundTag();
                     tag.putString("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
-                    tag.putByte("count", (byte) stack.getCount());
+                    int maxStackSize = stack.getMaxStackSize();
+                    tag.putInt("count", Math.max(1, Math.min(maxStackSize, stack.getCount())));
                     return tag;
                 });
     }

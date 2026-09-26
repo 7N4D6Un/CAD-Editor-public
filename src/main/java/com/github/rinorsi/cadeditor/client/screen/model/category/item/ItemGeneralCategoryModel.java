@@ -307,7 +307,7 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
 
     private void setCount(int value) {
         ItemStack stack = getParent().getContext().getItemStack();
-        int clamped = Math.max(1, Math.min(999, value));
+        int clamped = Math.max(1, Math.min(stack.getMaxStackSize(), value));
         stack.setCount(clamped);
     }
 
