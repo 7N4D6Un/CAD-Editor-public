@@ -35,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 
 public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     private static final Logger LOGGER = LogManager.getLogger("CAD-Editor/HideFlags");
-    private static final Set<DataComponentType<?>> TOOLTIP_TOGGLE_COMPONENTS = Set.of(DataComponents.ENCHANTMENTS, DataComponents.STORED_ENCHANTMENTS, DataComponents.ATTRIBUTE_MODIFIERS, DataComponents.UNBREAKABLE, DataComponents.CAN_BREAK, DataComponents.CAN_PLACE_ON, DataComponents.DYED_COLOR, DataComponents.TRIM, DataComponents.JUKEBOX_PLAYABLE);
     private final EnumSet<HideFlag> selectedFlags;
 
     public ItemHideFlagsCategoryModel(ItemEditorModel editor) {
@@ -43,14 +42,12 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         this.selectedFlags = EnumSet.noneOf(HideFlag.class);
     }
 
-    @Override 
+    @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
         EnumSet<HideFlag> initial = EnumSet.noneOf(HideFlag.class);
         this.selectedFlags.clear();
         initial.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
-        initial.addAll(readComponentVisibility(stack));
-        initial.addAll(readLegacyFlags(stack));
         for (HideFlag flag : HideFlag.values()) {
             boolean selected = initial.contains(flag);
             if (selected) {
@@ -62,21 +59,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private EnumSet<HideFlag> readLegacyFlags(ItemStack stack) {
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
-        int mask = getTag() != null ? getTag().getIntOr("HideFlags", 0) : 0;
-        if (mask != 0) {
-            for (HideFlag flag : HideFlag.values()) {
-                if ((mask & flag.getValue()) != 0) {
-                    flags.add(flag);
-                }
-            }
-        }
-        return flags;
-    }
-
-    @Override 
+    @Override
     public void apply() {
         super.apply();
         refreshSelectedFlags();
@@ -94,16 +77,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         featureLog("apply.targets", (Supplier<String>) () -> {
             return "hideTooltip=" + hideTooltip + ", componentFlags=" + componentFlags + ", hiddenComponents=" + describeComponents(hiddenComponents);
         });
-        applyComponentVisibility(stack, componentFlags);
-        boolean tooltipApplied = TooltipDisplaySupport.INSTANCE.apply(stack, hideTooltip, hiddenComponents);
-        if (!tooltipApplied) {
-            featureLog("apply.tooltip_display_missing", (Supplier<String>) () -> {
-                return "TooltipDisplay unavailable; tooltip suppression incomplete";
-            });
-        }
-        if (getTag() != null) {
-            getTag().remove("HideFlags");
-        }
+        TooltipDisplaySupport.INSTANCE.apply(stack, hideTooltip, hiddenComponents);
         syncEntriesWithStack(stack);
     }
 
@@ -122,8 +96,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     private void syncEntriesWithStack(ItemStack stack) {
         EnumSet<HideFlag> actual = EnumSet.noneOf(HideFlag.class);
         actual.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
-        actual.addAll(readComponentVisibility(stack));
-        actual.addAll(readLegacyFlags(stack));
         this.selectedFlags.clear();
         this.selectedFlags.addAll(actual);
         for (EntryModel entry : getEntries()) {
@@ -134,39 +106,11 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private EnumSet<HideFlag> readComponentVisibility(ItemStack stack) {
-        Boolean visible;
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        for (HideFlag flag : HideFlag.values()) {
-            if (flag != HideFlag.OTHER) {
-                for (DataComponentType<?> type : flag.hiddenComponents()) {
-                    Object value = stack.get(type);
-                    if (value != null && (visible = readShowFlag(type, value)) != null && !visible.booleanValue()) {
-                        flags.add(flag);
-                        break;
-                    }
-                }
-            }
-        }
-        return flags;
-    }
-
     private void setFlag(HideFlag flag, boolean value) {
         if (value) {
             this.selectedFlags.add(flag);
         } else {
             this.selectedFlags.remove(flag);
-        }
-    }
-
-    private void applyComponentVisibility(ItemStack stack, Set<HideFlag> flags) {
-        for (HideFlag flag : HideFlag.values()) {
-            if (flag != HideFlag.OTHER) {
-                boolean show = !flags.contains(flag);
-                for (DataComponentType<?> type : flag.hiddenComponents()) {
-                    setShowInTooltip(stack, type, show);
-                }
-            }
         }
     }
 
@@ -188,27 +132,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         return (String) components.stream().map(ItemHideFlagsCategoryModel::componentName).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static boolean applyKnownTooltipToggle(ItemStack stack, DataComponentType<?> type, Object value, boolean show) {
-        Codec codec;
-        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(type) || (codec = type.codec()) == null) {
-            return false;
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
-        Tag encoded = (Tag) codec.encodeStart(ops, value).result().orElse(null);
-        if (!(encoded instanceof CompoundTag compound)) {
-            return false;
-        }
-        compound.putBoolean("show_in_tooltip", show);
-        Object parsed = codec.parse(ops, compound).result().orElse(null);
-        if (parsed == null) {
-            return false;
-        }
-        stack.set((DataComponentType) type, parsed);
-        return true;
-    }
-
-
     private static boolean isFeatureDebugEnabled() {
         try {
             return ClientConfiguration.INSTANCE != null && ClientConfiguration.INSTANCE.getGuapiDebugMode() == DebugMode.FEATURE;
@@ -217,15 +140,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private static void setShowInTooltip(ItemStack stack, DataComponentType<?> rawType, boolean show) {
-        Object value = stack.get(rawType);
-        if (value == null) {
-            return;
-        }
-        applyKnownTooltipToggle(stack, rawType, value, show);
-    }
-
-    
     public enum HideFlag {
         ENCHANTMENTS(DataComponents.ENCHANTMENTS, DataComponents.STORED_ENCHANTMENTS),
         ATTRIBUTE_MODIFIERS(DataComponents.ATTRIBUTE_MODIFIERS),
@@ -257,10 +171,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             return ModTexts.gui(name().toLowerCase(Locale.ROOT));
         }
 
-        public int getValue() {
-            return 1 << ordinal();
-        }
-
         public Collection<DataComponentType<?>> hiddenComponents() {
             return this.hiddenComponents;
         }
@@ -270,7 +180,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    
+
     private static final class TooltipDisplaySupport {
         static final TooltipDisplaySupport INSTANCE = new TooltipDisplaySupport();
         private final DataComponentType<Object> type;
@@ -356,22 +266,5 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 stack.remove(this.type);
             }
         }
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Boolean readShowFlag(DataComponentType<?> rawType, Object value) {
-        Codec codec;
-        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(rawType) || (codec = rawType.codec()) == null) {
-            return null;
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
-        Tag encoded = (Tag) codec.encodeStart(ops, value).result().orElse(null);
-        if (!(encoded instanceof CompoundTag compound)) {
-            return null;
-        }
-        if (!compound.contains("show_in_tooltip")) {
-            return true;
-        }
-        return compound.getBooleanOr("show_in_tooltip", true);
     }
 }
