@@ -74,7 +74,7 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         String currentId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         int currentCount = stack.getCount();
         getEntries().add(new ItemSelectionEntryModel(this, ModTexts.ITEM_ID, currentId, this::setItemId));
-        getEntries().add(new IntegerEntryModel(this, ModTexts.COUNT, currentCount, value -> setCount(value)));
+        getEntries().add(new IntegerEntryModel(this, ModTexts.COUNT, currentCount, value -> setCount(value), value -> value >= 1 && value <= stack.getMaxStackSize()));
         getEntries().add(new IntegerEntryModel(this, ModTexts.MAX_STACK_SIZE, getMaxStackSizeValue(stack), value -> setMaxStackSize(value), value -> value.intValue() >= 0 && value.intValue() <= 99));
         getEntries().add(new RaritySelectionEntryModel(this, ModTexts.gui("rarity"), getRarityString(stack), this::setRarity));
         ItemSelectionEntryModel itemModelEntry = new ItemSelectionEntryModel(this, ModTexts.gui("item_model"), getItemModelId(stack), this::setItemModelId);
