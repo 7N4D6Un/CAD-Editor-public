@@ -171,6 +171,10 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             return ModTexts.gui(name().toLowerCase(Locale.ROOT));
         }
 
+        public int getValue() {
+            return 1 << ordinal();
+        }
+
         public Collection<DataComponentType<?>> hiddenComponents() {
             return this.hiddenComponents;
         }
