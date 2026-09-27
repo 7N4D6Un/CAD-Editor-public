@@ -150,7 +150,6 @@
   "cadeditor.gui.pot_back": "背面",
   "cadeditor.gui.pot_left": "左侧",
   "cadeditor.gui.pot_right": "右侧",
-  "cadeditor.message.pot_decoration_invalid": "陶罐图案只能使用陶罐碎片或砖块。",
   "cadeditor.gui.copy": "复制",
   "cadeditor.gui.copy_command": "复制 %s 命令到剪贴板",
   "cadeditor.gui.copy_command_alt": "复制命令",

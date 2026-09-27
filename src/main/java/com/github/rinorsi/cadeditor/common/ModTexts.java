@@ -572,10 +572,6 @@ public final class ModTexts {
             return prefixed(GuapiHelper.translated("cadeditor.message.snbt_invalid_cannot_apply")).withStyle(ChatFormatting.RED);
         }
 
-        public static MutableComponent potDecorationInvalid() {
-            return prefixed(GuapiHelper.translated("cadeditor.message.pot_decoration_invalid")).withStyle(ChatFormatting.RED);
-        }
-
         private static MutableComponent prefixed(MutableComponent arg) {
             return GuapiHelper.translated("chat.type.announcement", GuapiHelper.translated("cadeditor"), arg);
         }

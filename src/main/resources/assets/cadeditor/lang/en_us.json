@@ -157,7 +157,6 @@
   "cadeditor.gui.pot_back": "Back",
   "cadeditor.gui.pot_left": "Left",
   "cadeditor.gui.pot_right": "Right",
-  "cadeditor.message.pot_decoration_invalid": "Only pottery sherds or bricks can be used for pot decorations.",
   "cadeditor.gui.copy": "Copy",
   "cadeditor.gui.copy_command": "Copy %s command to clipboard",
   "cadeditor.gui.copy_command_alt": "Copy Command",
