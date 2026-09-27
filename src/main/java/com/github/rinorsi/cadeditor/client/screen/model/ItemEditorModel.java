@@ -82,6 +82,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BannerItem;
 import net.minecraft.world.item.BlockItem;
@@ -97,6 +98,7 @@ import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.TippedArrowItem;
 import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.TypedEntityData;
 
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
@@ -244,13 +246,13 @@ public class ItemEditorModel extends StandardEditorModel {
         if ((item instanceof CompassItem) || stack.has(DataComponents.LODESTONE_TRACKER)) {
             getCategories().add(new ItemLodestoneCategoryModel(this));
         }
-        if (item == Items.SUSPICIOUS_STEW) {
+        if (item == Items.SUSPICIOUS_STEW || stack.has(DataComponents.SUSPICIOUS_STEW_EFFECTS)) {
             getCategories().add(new ItemSuspiciousStewEffectsCategoryModel(this));
         }
-        if (item == Items.PLAYER_HEAD) {
+        if (item == Items.PLAYER_HEAD || stack.has(DataComponents.PROFILE)) {
             getCategories().add(new ItemProfileCategoryModel(this));
         }
-        if (item == Items.ARMOR_STAND) {
+        if (item == Items.ARMOR_STAND || isArmorStandItem(stack)) {
             getCategories().add(new ItemArmorStandCategoryModel(this));
         }
         boolean isContainerBlockItem = false;
@@ -263,16 +265,16 @@ public class ItemEditorModel extends StandardEditorModel {
             getCategories().add(new ItemContainerCategoryModel(this));
             getCategories().add(new ItemContainerGridCategoryModel(this));
         }
-        if ((item instanceof BlockItem) && ((BlockItem) item).getBlock() instanceof BeehiveBlock) {
+        if (stack.has(DataComponents.BEES) || ((item instanceof BlockItem) && ((BlockItem) item).getBlock() instanceof BeehiveBlock)) {
             getCategories().add(new ItemBeehiveCategoryModel(this));
         }
         if (stack.has(DataComponents.BANNER_PATTERNS) || stack.has(DataComponents.BASE_COLOR) || (item instanceof BannerItem) || (item instanceof ShieldItem)) {
             getCategories().add(new ItemBannerPatternCategoryModel(this));
         }
-        if (stack.is(ItemTags.TRIM_MATERIALS)) {
+        if (stack.is(ItemTags.TRIM_MATERIALS) || stack.has(DataComponents.PROVIDES_TRIM_MATERIAL)) {
             getCategories().add(new ItemProvidesTrimMaterialCategoryModel(this));
         }
-        if (stack.is(ItemTags.LOOM_PATTERNS)) {
+        if (stack.is(ItemTags.LOOM_PATTERNS) || stack.has(DataComponents.PROVIDES_BANNER_PATTERNS)) {
             getCategories().add(new ItemProvidesBannerPatternCategoryModel(this));
         }
         if (stack.has(DataComponents.BUCKET_ENTITY_DATA) || (item instanceof MobBucketItem)) {
@@ -296,15 +298,20 @@ public class ItemEditorModel extends StandardEditorModel {
         if (stack.has(DataComponents.CUSTOM_DATA)) {
             getCategories().add(new ItemCustomDataCategoryModel(this));
         }
-        if (item == Items.WRITABLE_BOOK) {
+        if (item == Items.WRITABLE_BOOK || stack.has(DataComponents.WRITABLE_BOOK_CONTENT)) {
             getCategories().add(new ItemWritableBookPagesCategoryModel(this));
         }
-        if (item == Items.WRITTEN_BOOK) {
+        if (item == Items.WRITTEN_BOOK || stack.has(DataComponents.WRITTEN_BOOK_CONTENT)) {
             getCategories().add(new ItemWrittenBookCategoryModel(this));
         }
-        if ((item instanceof PotionItem) || (item instanceof TippedArrowItem)) {
+        if ((item instanceof PotionItem) || (item instanceof TippedArrowItem) || stack.has(DataComponents.POTION_CONTENTS)) {
             getCategories().add(new ItemPotionEffectsCategoryModel(this));
         }
+    }
+
+    private boolean isArmorStandItem(ItemStack stack) {
+        TypedEntityData<?> data = stack.get(DataComponents.ENTITY_DATA);
+        return data != null && data.type() == EntityTypes.ARMOR_STAND;
     }
 
     @Override 
