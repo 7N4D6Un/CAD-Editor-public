@@ -6,12 +6,14 @@ import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.HideFlagEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.SpacerEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import com.mojang.serialization.Codec;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +37,6 @@ import org.apache.logging.log4j.Logger;
 
 public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     private static final Logger LOGGER = LogManager.getLogger("CAD-Editor/HideFlags");
-    private static final Set<DataComponentType<?>> TOOLTIP_TOGGLE_COMPONENTS = Set.of(DataComponents.ENCHANTMENTS, DataComponents.STORED_ENCHANTMENTS, DataComponents.ATTRIBUTE_MODIFIERS, DataComponents.UNBREAKABLE, DataComponents.CAN_BREAK, DataComponents.CAN_PLACE_ON, DataComponents.DYED_COLOR, DataComponents.TRIM, DataComponents.JUKEBOX_PLAYABLE);
     private final EnumSet<HideFlag> selectedFlags;
 
     public ItemHideFlagsCategoryModel(ItemEditorModel editor) {
@@ -43,40 +44,42 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         this.selectedFlags = EnumSet.noneOf(HideFlag.class);
     }
 
-    @Override 
+    @Override
     protected void setupEntries() {
         ItemStack stack = getParent().getContext().getItemStack();
         EnumSet<HideFlag> initial = EnumSet.noneOf(HideFlag.class);
         this.selectedFlags.clear();
         initial.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
-        initial.addAll(readComponentVisibility(stack));
-        initial.addAll(readLegacyFlags(stack));
-        for (HideFlag flag : HideFlag.values()) {
-            boolean selected = initial.contains(flag);
-            if (selected) {
-                this.selectedFlags.add(flag);
+        List<List<HideFlag>> groups = List.of(
+                List.of(HideFlag.HIDE_ALL_TOOLTIP, HideFlag.LORE),
+                List.of(HideFlag.ENCHANTMENTS, HideFlag.STORED_ENCHANTMENTS),
+                List.of(HideFlag.ATTRIBUTE_MODIFIERS, HideFlag.UNBREAKABLE, HideFlag.CAN_DESTROY, HideFlag.CAN_PLACE_ON, HideFlag.DAMAGE),
+                List.of(HideFlag.DYED, HideFlag.ARMOR_TRIMS, HideFlag.BANNER_PATTERNS),
+                List.of(HideFlag.CONTAINER, HideFlag.CONTAINER_LOOT),
+                List.of(HideFlag.FIREWORKS, HideFlag.FIREWORK_EXPLOSION),
+                List.of(HideFlag.POTION_CONTENTS, HideFlag.SUSPICIOUS_STEW_EFFECTS, HideFlag.OMINOUS_BOTTLE_AMPLIFIER),
+                List.of(HideFlag.ENTITY_DATA, HideFlag.BLOCK_STATE, HideFlag.BLOCK_ENTITY_DATA),
+                List.of(HideFlag.PROFILE, HideFlag.MAP_ID, HideFlag.WRITTEN_BOOK_CONTENT),
+                List.of(HideFlag.JUKEBOX, HideFlag.CHARGED_PROJECTILES, HideFlag.BEES, HideFlag.POT_DECORATIONS, HideFlag.TROPICAL_FISH_PATTERN, HideFlag.INSTRUMENT, HideFlag.SULFUR_CUBE_CONTENT, HideFlag.INTANGIBLE_PROJECTILE));
+        boolean first = true;
+        for (List<HideFlag> group : groups) {
+            if (!first) {
+                getEntries().add(new SpacerEntryModel(this));
             }
-            getEntries().add(new HideFlagEntryModel(this, flag, selected, value -> {
-                setFlag(flag, value.booleanValue());
-            }));
-        }
-    }
-
-    private EnumSet<HideFlag> readLegacyFlags(ItemStack stack) {
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        ClientUtil.saveItemStack(ClientUtil.registryAccess(), stack);
-        int mask = getTag() != null ? getTag().getIntOr("HideFlags", 0) : 0;
-        if (mask != 0) {
-            for (HideFlag flag : HideFlag.values()) {
-                if ((mask & flag.getValue()) != 0) {
-                    flags.add(flag);
+            first = false;
+            for (HideFlag flag : group) {
+                boolean selected = initial.contains(flag);
+                if (selected) {
+                    this.selectedFlags.add(flag);
                 }
+                getEntries().add(new HideFlagEntryModel(this, flag, selected, value -> {
+                    setFlag(flag, value.booleanValue());
+                }));
             }
         }
-        return flags;
     }
 
-    @Override 
+    @Override
     public void apply() {
         super.apply();
         refreshSelectedFlags();
@@ -85,25 +88,15 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         });
         ItemStack stack = getParent().getContext().getItemStack();
         TooltipDisplaySupport.INSTANCE.clear(stack);
-        EnumSet<HideFlag> componentFlags = EnumSet.copyOf((EnumSet) this.selectedFlags);
-        boolean hideTooltip = componentFlags.remove(HideFlag.OTHER);
         Set<DataComponentType<?>> hiddenComponents = new LinkedHashSet<>();
-        for (HideFlag flag : componentFlags) {
+        for (HideFlag flag : this.selectedFlags) {
             hiddenComponents.addAll(flag.hiddenComponents());
         }
+        boolean hideTooltip = this.selectedFlags.contains(HideFlag.HIDE_ALL_TOOLTIP);
         featureLog("apply.targets", (Supplier<String>) () -> {
-            return "hideTooltip=" + hideTooltip + ", componentFlags=" + componentFlags + ", hiddenComponents=" + describeComponents(hiddenComponents);
+            return "hideTooltip=" + hideTooltip + ", hiddenComponents=" + describeComponents(hiddenComponents);
         });
-        applyComponentVisibility(stack, componentFlags);
-        boolean tooltipApplied = TooltipDisplaySupport.INSTANCE.apply(stack, hideTooltip, hiddenComponents);
-        if (!tooltipApplied) {
-            featureLog("apply.tooltip_display_missing", (Supplier<String>) () -> {
-                return "TooltipDisplay unavailable; tooltip suppression incomplete";
-            });
-        }
-        if (getTag() != null) {
-            getTag().remove("HideFlags");
-        }
+        TooltipDisplaySupport.INSTANCE.apply(stack, hideTooltip, hiddenComponents);
         syncEntriesWithStack(stack);
     }
 
@@ -122,8 +115,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
     private void syncEntriesWithStack(ItemStack stack) {
         EnumSet<HideFlag> actual = EnumSet.noneOf(HideFlag.class);
         actual.addAll(TooltipDisplaySupport.INSTANCE.read(stack));
-        actual.addAll(readComponentVisibility(stack));
-        actual.addAll(readLegacyFlags(stack));
         this.selectedFlags.clear();
         this.selectedFlags.addAll(actual);
         for (EntryModel entry : getEntries()) {
@@ -134,39 +125,11 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private EnumSet<HideFlag> readComponentVisibility(ItemStack stack) {
-        Boolean visible;
-        EnumSet<HideFlag> flags = EnumSet.noneOf(HideFlag.class);
-        for (HideFlag flag : HideFlag.values()) {
-            if (flag != HideFlag.OTHER) {
-                for (DataComponentType<?> type : flag.hiddenComponents()) {
-                    Object value = stack.get(type);
-                    if (value != null && (visible = readShowFlag(type, value)) != null && !visible.booleanValue()) {
-                        flags.add(flag);
-                        break;
-                    }
-                }
-            }
-        }
-        return flags;
-    }
-
     private void setFlag(HideFlag flag, boolean value) {
         if (value) {
             this.selectedFlags.add(flag);
         } else {
             this.selectedFlags.remove(flag);
-        }
-    }
-
-    private void applyComponentVisibility(ItemStack stack, Set<HideFlag> flags) {
-        for (HideFlag flag : HideFlag.values()) {
-            if (flag != HideFlag.OTHER) {
-                boolean show = !flags.contains(flag);
-                for (DataComponentType<?> type : flag.hiddenComponents()) {
-                    setShowInTooltip(stack, type, show);
-                }
-            }
         }
     }
 
@@ -188,27 +151,6 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         return (String) components.stream().map(ItemHideFlagsCategoryModel::componentName).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static boolean applyKnownTooltipToggle(ItemStack stack, DataComponentType<?> type, Object value, boolean show) {
-        Codec codec;
-        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(type) || (codec = type.codec()) == null) {
-            return false;
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
-        Tag encoded = (Tag) codec.encodeStart(ops, value).result().orElse(null);
-        if (!(encoded instanceof CompoundTag compound)) {
-            return false;
-        }
-        compound.putBoolean("show_in_tooltip", show);
-        Object parsed = codec.parse(ops, compound).result().orElse(null);
-        if (parsed == null) {
-            return false;
-        }
-        stack.set((DataComponentType) type, parsed);
-        return true;
-    }
-
-
     private static boolean isFeatureDebugEnabled() {
         try {
             return ClientConfiguration.INSTANCE != null && ClientConfiguration.INSTANCE.getGuapiDebugMode() == DebugMode.FEATURE;
@@ -217,29 +159,44 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private static void setShowInTooltip(ItemStack stack, DataComponentType<?> rawType, boolean show) {
-        Object value = stack.get(rawType);
-        if (value == null) {
-            return;
-        }
-        applyKnownTooltipToggle(stack, rawType, value, show);
-    }
-
-    
     public enum HideFlag {
-        ENCHANTMENTS(DataComponents.ENCHANTMENTS, DataComponents.STORED_ENCHANTMENTS),
-        ATTRIBUTE_MODIFIERS(DataComponents.ATTRIBUTE_MODIFIERS),
-        UNBREAKABLE(DataComponents.UNBREAKABLE),
-        CAN_DESTROY(DataComponents.CAN_BREAK),
-        CAN_PLACE_ON(DataComponents.CAN_PLACE_ON),
-        OTHER(new DataComponentType[0]),
-        DYED(DataComponents.DYED_COLOR),
-        ARMOR_TRIMS(DataComponents.TRIM),
-        JUKEBOX(DataComponents.JUKEBOX_PLAYABLE),
-        LORE(DataComponents.LORE);
+        HIDE_ALL_TOOLTIP(null, 0),
+        LORE(DataComponents.LORE, 0),
+        ENCHANTMENTS(DataComponents.ENCHANTMENTS, 1),
+        STORED_ENCHANTMENTS(DataComponents.STORED_ENCHANTMENTS, 32),
+        ATTRIBUTE_MODIFIERS(DataComponents.ATTRIBUTE_MODIFIERS, 2),
+        UNBREAKABLE(DataComponents.UNBREAKABLE, 4),
+        CAN_DESTROY(DataComponents.CAN_BREAK, 8),
+        CAN_PLACE_ON(DataComponents.CAN_PLACE_ON, 16),
+        DAMAGE(DataComponents.DAMAGE, 0),
+        DYED(DataComponents.DYED_COLOR, 64),
+        ARMOR_TRIMS(DataComponents.TRIM, 128),
+        BANNER_PATTERNS(DataComponents.BANNER_PATTERNS, 0),
+        JUKEBOX(DataComponents.JUKEBOX_PLAYABLE, 0),
+        CONTAINER(DataComponents.CONTAINER, 0),
+        CONTAINER_LOOT(DataComponents.CONTAINER_LOOT, 0),
+        FIREWORKS(DataComponents.FIREWORKS, 0),
+        FIREWORK_EXPLOSION(DataComponents.FIREWORK_EXPLOSION, 0),
+        POTION_CONTENTS(DataComponents.POTION_CONTENTS, 0),
+        SUSPICIOUS_STEW_EFFECTS(DataComponents.SUSPICIOUS_STEW_EFFECTS, 0),
+        OMINOUS_BOTTLE_AMPLIFIER(DataComponents.OMINOUS_BOTTLE_AMPLIFIER, 0),
+        WRITTEN_BOOK_CONTENT(DataComponents.WRITTEN_BOOK_CONTENT, 0),
+        ENTITY_DATA(DataComponents.ENTITY_DATA, 0),
+        BLOCK_STATE(DataComponents.BLOCK_STATE, 0),
+        BLOCK_ENTITY_DATA(DataComponents.BLOCK_ENTITY_DATA, 0),
+        PROFILE(DataComponents.PROFILE, 0),
+        MAP_ID(DataComponents.MAP_ID, 0),
+        CHARGED_PROJECTILES(DataComponents.CHARGED_PROJECTILES, 0),
+        BEES(DataComponents.BEES, 0),
+        POT_DECORATIONS(DataComponents.POT_DECORATIONS, 0),
+        TROPICAL_FISH_PATTERN(DataComponents.TROPICAL_FISH_PATTERN, 0),
+        INSTRUMENT(DataComponents.INSTRUMENT, 0),
+        SULFUR_CUBE_CONTENT(DataComponents.SULFUR_CUBE_CONTENT, 0),
+        INTANGIBLE_PROJECTILE(DataComponents.INTANGIBLE_PROJECTILE, 0);
 
         private static final Map<DataComponentType<?>, HideFlag> COMPONENT_TO_FLAG = new HashMap<>();
         private final Set<DataComponentType<?>> hiddenComponents;
+        private final int legacyBit;
 
         static {
             for (HideFlag flag : values()) {
@@ -249,16 +206,17 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
             }
         }
 
-        HideFlag(DataComponentType... dataComponentTypeArr) {
-            this.hiddenComponents = Set.of(dataComponentTypeArr);
+        HideFlag(DataComponentType<?> component, int legacyBit) {
+            this.hiddenComponents = component == null ? Set.of() : Set.of(component);
+            this.legacyBit = legacyBit;
         }
 
         public MutableComponent getName() {
-            return ModTexts.gui(name().toLowerCase(Locale.ROOT));
+            return ModTexts.gui("hide_flags." + name().toLowerCase(Locale.ROOT));
         }
 
-        public int getValue() {
-            return 1 << ordinal();
+        public int getLegacyBit() {
+            return this.legacyBit;
         }
 
         public Collection<DataComponentType<?>> hiddenComponents() {
@@ -270,7 +228,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    
+
     private static final class TooltipDisplaySupport {
         static final TooltipDisplaySupport INSTANCE = new TooltipDisplaySupport();
         private final DataComponentType<Object> type;
@@ -304,7 +262,7 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 return flags;
             }
             if (compound.getBooleanOr("hide_tooltip", false)) {
-                flags.add(HideFlag.OTHER);
+                flags.add(HideFlag.HIDE_ALL_TOOLTIP);
             }
             ListTag hiddenList = (ListTag) compound.getList("hidden_components").orElse(new ListTag());
             for (Tag tagElement : hiddenList) {
@@ -356,22 +314,5 @@ public class ItemHideFlagsCategoryModel extends ItemEditorCategoryModel {
                 stack.remove(this.type);
             }
         }
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static Boolean readShowFlag(DataComponentType<?> rawType, Object value) {
-        Codec codec;
-        if (!TOOLTIP_TOGGLE_COMPONENTS.contains(rawType) || (codec = rawType.codec()) == null) {
-            return null;
-        }
-        RegistryOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, ClientUtil.registryAccess());
-        Tag encoded = (Tag) codec.encodeStart(ops, value).result().orElse(null);
-        if (!(encoded instanceof CompoundTag compound)) {
-            return null;
-        }
-        if (!compound.contains("show_in_tooltip")) {
-            return true;
-        }
-        return compound.getBooleanOr("show_in_tooltip", true);
     }
 }

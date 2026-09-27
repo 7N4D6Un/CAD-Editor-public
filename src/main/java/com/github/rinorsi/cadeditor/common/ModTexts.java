@@ -113,7 +113,6 @@ public final class ModTexts {
     public static final MutableComponent INTANGIBLE_PROJECTILE = GuapiHelper.translated("cadeditor.gui.intangible_projectile");
     public static final MutableComponent MAX_STACK_SIZE = GuapiHelper.translated("cadeditor.gui.max_stack_size");
     public static final MutableComponent MAX_DAMAGE = GuapiHelper.translated("cadeditor.gui.max_damage");
-    public static final MutableComponent[] HIDE_OTHER_TOOLTIP = arrayText("cadeditor.gui.hide_other_tooltip", 8);
     public static final MutableComponent ITALIC = GuapiHelper.translated("cadeditor.gui.italic");
     public static final MutableComponent ITEM = GuapiHelper.translated("cadeditor.text.item");
     public static final MutableComponent ITEM_NAME = GuapiHelper.translated("cadeditor.gui.item_name");

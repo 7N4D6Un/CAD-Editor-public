@@ -3,12 +3,9 @@ package com.github.rinorsi.cadeditor.client.screen.model.entry.item;
 import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemHideFlagsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
-import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.network.chat.MutableComponent;
 
 import java.util.function.Consumer;
-
-import static com.github.franckyi.guapi.api.GuapiHelper.*;
 
 @SuppressWarnings("this-escape")
 public class HideFlagEntryModel extends BooleanEntryModel {
@@ -21,11 +18,7 @@ public class HideFlagEntryModel extends BooleanEntryModel {
     }
 
     private static MutableComponent getHideFlagLabel(ItemHideFlagsCategoryModel.HideFlag hideFlag) {
-        MutableComponent label = ModTexts.hide(hideFlag.getName());
-        if (hideFlag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
-            label.append(text("*"));
-        }
-        return label;
+        return hideFlag.getName();
     }
 
     public ItemHideFlagsCategoryModel.HideFlag getHideFlag() {

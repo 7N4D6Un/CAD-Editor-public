@@ -807,11 +807,7 @@ public class ItemEditorModel extends StandardEditorModel {
             int mask = legacyTag.getIntOr("HideFlags", 0);
             if (mask != 0) {
                 for (ItemHideFlagsCategoryModel.HideFlag flag : ItemHideFlagsCategoryModel.HideFlag.values()) {
-                    if (flag == ItemHideFlagsCategoryModel.HideFlag.OTHER) {
-                        if ((mask & flag.getValue()) != 0) {
-                            hideTooltip = true;
-                        }
-                    } else if ((mask & flag.getValue()) != 0) {
+                    if (flag.getLegacyBit() != 0 && (mask & flag.getLegacyBit()) != 0) {
                         hiddenFlags.add(flag);
                     }
                 }
