@@ -8,6 +8,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityAt
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityEquipmentCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityGeneralCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityItemFrameCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMannequinCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMountCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntitySpawnSettingsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityTamingCategoryModel;
@@ -29,6 +30,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
@@ -72,6 +74,9 @@ public class EntityEditorModel extends StandardEditorModel {
         }
         if (isItemFrameLike(entity)) {
             getCategories().add(new EntityItemFrameCategoryModel(this));
+        }
+        if (isMannequin(entity)) {
+            getCategories().add(new EntityMannequinCategoryModel(this));
         }
         if (entity instanceof AbstractVillager) {
             getCategories().add(new EntityVillagerDataCategoryModel(this));
@@ -143,6 +148,17 @@ public class EntityEditorModel extends StandardEditorModel {
         }
         String id = tag.getStringOr("id", "");
         return "minecraft:item_frame".equals(id) || "minecraft:glow_item_frame".equals(id);
+    }
+
+    private boolean isMannequin(Entity entity) {
+        if (entity instanceof Mannequin) {
+            return true;
+        }
+        CompoundTag tag = getContext().getTag();
+        if (tag == null) {
+            return false;
+        }
+        return "minecraft:mannequin".equals(tag.getStringOr("id", ""));
     }
 
     public void handleEntityReplaced(CompoundTag newTag) {
