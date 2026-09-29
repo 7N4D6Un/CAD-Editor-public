@@ -255,7 +255,7 @@
   "cadeditor.gui.item_frame_item": "展示物品",
   "cadeditor.gui.item_frame_drop_chance": "掉落概率",
   "cadeditor.gui.item_frame_rotation": "物品旋转",
-  "cadeditor.gui.item_frame_fixed": "固定",
+  "cadeditor.gui.item_frame_fixed": "锁定",
   "cadeditor.gui.item_frame_invisible": "隐形",
   "cadeditor.gui.item_frame_facing": "朝向",
   "cadeditor.gui.direction.down": "下",

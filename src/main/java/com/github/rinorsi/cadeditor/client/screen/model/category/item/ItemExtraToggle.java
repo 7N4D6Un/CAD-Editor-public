@@ -12,6 +12,7 @@ public enum ItemExtraToggle {
     DYE(ModTexts.gui("dye_category"), ItemDyeColorCategoryModel.class, ItemDyeColorCategoryModel::new),
     SPAWN_EGG(ModTexts.SPAWN_EGG, ItemSpawnEggCategoryModel.class, editor -> new ItemSpawnEggCategoryModel(editor, editor.getContext().getItemStack().getItem() instanceof SpawnEggItem spawnEgg ? spawnEgg : null)),
     ARMOR_STAND(ModTexts.gui("armor_stand"), ItemArmorStandCategoryModel.class, ItemArmorStandCategoryModel::new),
+    ITEM_FRAME(ModTexts.ITEM_FRAME, ItemFrameDataCategoryModel.class, ItemFrameDataCategoryModel::new),
     SPAWNER(ModTexts.gui("spawner"), ItemSpawnerCategoryModel.class, ItemSpawnerCategoryModel::new),
     TRIAL_SPAWNER(ModTexts.gui("trial_spawner"), ItemTrialSpawnerCategoryModel.class, ItemTrialSpawnerCategoryModel::new),
     KNOWLEDGE_BOOK(ModTexts.gui("knowledge_book"), ItemRecipesCategoryModel.class, ItemRecipesCategoryModel::new),

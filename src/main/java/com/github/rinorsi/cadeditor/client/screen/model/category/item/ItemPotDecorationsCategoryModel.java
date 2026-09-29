@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.PotDecorations;
 
 import java.util.Optional;
@@ -43,7 +44,7 @@ public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
     }
 
     private PotDecorationEntryModel createEntry(net.minecraft.network.chat.MutableComponent label, Optional<Item> optionalItem) {
-        ItemStack stack = optionalItem.map(ItemStack::new).orElse(ItemStack.EMPTY);
+        ItemStack stack = optionalItem.map(ItemStack::new).orElseGet(() -> new ItemStack(Items.BRICK));
         return new PotDecorationEntryModel(this, label, stack);
     }
 
@@ -68,7 +69,7 @@ public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
 
     private Optional<Item> toItem(PotDecorationEntryModel entry) {
         ItemStack stack = entry.getItemStack();
-        if (stack.isEmpty()) {
+        if (stack.isEmpty() || stack.is(Items.BRICK)) {
             entry.setValid(true);
             return Optional.empty();
         }

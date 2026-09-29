@@ -7,6 +7,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.category.CategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.FoodComponentState;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemArmorStandCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemFrameDataCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemAttributeModifiersCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemBeehiveCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemBannerPatternCategoryModel;
@@ -74,7 +75,9 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.Identifier;
@@ -99,7 +102,7 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.TippedArrowItem;
 import net.minecraft.world.item.component.Consumable;
 import net.minecraft.world.item.component.TypedEntityData;
-
+import net.minecraft.world.item.component.TooltipProvider;
 import net.minecraft.world.item.component.UseRemainder;
 import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
 import net.minecraft.world.item.consume_effects.ConsumeEffect;
@@ -255,6 +258,9 @@ public class ItemEditorModel extends StandardEditorModel {
         if (item == Items.ARMOR_STAND || isArmorStandItem(stack)) {
             getCategories().add(new ItemArmorStandCategoryModel(this));
         }
+        if (item == Items.ITEM_FRAME || item == Items.GLOW_ITEM_FRAME || isItemFrameDataItem(stack)) {
+            getCategories().add(new ItemFrameDataCategoryModel(this));
+        }
         boolean isContainerBlockItem = false;
         if (item instanceof BlockItem) {
             BlockItem bi = (BlockItem) item;
@@ -314,7 +320,12 @@ public class ItemEditorModel extends StandardEditorModel {
         return data != null && data.type() == EntityTypes.ARMOR_STAND;
     }
 
-    @Override 
+    private boolean isItemFrameDataItem(ItemStack stack) {
+        TypedEntityData<?> data = stack.get(DataComponents.ENTITY_DATA);
+        return data != null && (data.type() == EntityTypes.ITEM_FRAME || data.type() == EntityTypes.GLOW_ITEM_FRAME);
+    }
+
+    @Override
     public void apply() {
         ItemEditorContext context = getContext();
         super.apply();
@@ -328,10 +339,47 @@ public class ItemEditorModel extends StandardEditorModel {
             } else {
                 rebuilt.put(KEY_LEGACY_TAG, stagedLegacy);
             }
+            stripRemovedComponentTombstones(rebuilt, context.getItemStack().getItem());
             context.setTag(rebuilt);
             ItemStack parsed = ClientUtil.parseItemStack(registryAccess, rebuilt);
             context.setItemStack(parsed.isEmpty() ? context.getItemStack().copy() : parsed);
         }
+    }
+
+    private static void stripRemovedComponentTombstones(CompoundTag rebuilt, Item item) {
+        CompoundTag components = rebuilt.getCompound("components").orElse(null);
+        if (components == null || components.isEmpty()) {
+            return;
+        }
+        Item.TooltipContext tooltipContext = Item.TooltipContext.EMPTY;
+        List<String> keys = List.copyOf(components.keySet());
+        for (String key : keys) {
+            if (!key.startsWith(TOMBSTONE_PREFIX)) {
+                continue;
+            }
+            Identifier id = Identifier.tryParse(key.substring(1));
+            if (id == null || !isRedundantTombstone(id, item, tooltipContext)) {
+                continue;
+            }
+            components.remove(key);
+        }
+        if (components.isEmpty()) {
+            rebuilt.remove("components");
+        }
+    }
+
+    private static boolean isRedundantTombstone(Identifier id, Item item, Item.TooltipContext context) {
+        DataComponentType<?> type = BuiltInRegistries.DATA_COMPONENT_TYPE.getOptional(id).orElse(null);
+        if (type == null) {
+            return false;
+        }
+        Object defaultValue = item.components().get(type);
+        if (!(defaultValue instanceof TooltipProvider provider)) {
+            return false;
+        }
+        List<Component> lines = new ArrayList<>();
+        provider.addToTooltip(context, lines::add, TooltipFlag.NORMAL, item.components());
+        return lines.isEmpty();
     }
 
     public FoodComponentState getFoodState() {

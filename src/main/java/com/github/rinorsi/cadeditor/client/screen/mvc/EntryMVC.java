@@ -97,6 +97,8 @@ public final class EntryMVC implements MVC<EntryModel, EntryView, EntryControlle
                     MVC.createViewAndBind((VaultEntityEntryModel) model, VaultEntityEntryView::new, VaultEntityEntryController::new);
             case CONTAINER_SLOT ->
                     MVC.createViewAndBind((ItemContainerSlotEntryModel) model, ItemContainerSlotEntryView::new, ItemContainerSlotEntryController::new);
+            case POT_DECORATION ->
+                    MVC.createViewAndBind((ItemContainerSlotEntryModel) model, ItemContainerSlotEntryView::new, ItemContainerSlotEntryController::new);
             case MAP_DECORATION ->
                     MVC.createViewAndBind((MapDecorationEntryModel) model, MapDecorationEntryView::new, MapDecorationEntryController::new);
             case TOOL_RULE ->

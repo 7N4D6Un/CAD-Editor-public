@@ -6,6 +6,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EnumEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.IntegerEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.SpacerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.entity.ItemFrameItemEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import net.minecraft.core.Direction;
@@ -25,24 +26,26 @@ public class EntityItemFrameCategoryModel extends EntityCategoryModel {
     protected void setupEntries() {
         CompoundTag data = getData();
 
+        getEntries().add(new BooleanEntryModel(this, ModTexts.ITEM_FRAME_FIXED, data.getBooleanOr("Fixed", false), this::setFixed));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.ITEM_FRAME_INVISIBLE, data.getBooleanOr("Invisible", false), this::setInvisible));
+
+        itemRotation = Byte.toUnsignedInt(data.getByteOr("ItemRotation", (byte) 0));
+        getEntries().add(new IntegerEntryModel(this, ModTexts.ITEM_FRAME_ROTATION, itemRotation, this::setItemRotation, value -> value != null && value >= 0 && value <= 7));
+
+        itemDropChance = data.contains("ItemDropChance") ? data.getFloatOr("ItemDropChance", 1f) : 1f;
+        getEntries().add(new FloatEntryModel(this, ModTexts.ITEM_FRAME_DROP_CHANCE, itemDropChance, this::setItemDropChance));
+
         Direction facing = Direction.from3DDataValue(Byte.toUnsignedInt(data.getByteOr("Facing", (byte) 0)));
         EnumEntryModel<Direction> facingEntry = new EnumEntryModel<>(this, ModTexts.ITEM_FRAME_FACING, Direction.values(), facing, this::setFacing);
         facingEntry.withTextFactory(ModTexts::direction);
         getEntries().add(facingEntry);
 
-        getEntries().add(new BooleanEntryModel(this, ModTexts.ITEM_FRAME_FIXED, data.getBooleanOr("Fixed", false), this::setFixed));
-        getEntries().add(new BooleanEntryModel(this, ModTexts.ITEM_FRAME_INVISIBLE, data.getBooleanOr("Invisible", false), this::setInvisible));
+        getEntries().add(new SpacerEntryModel(this));
 
         ItemStack currentItem = readDisplayedItem();
         itemEntry = new ItemFrameItemEntryModel(this, currentItem, ModTexts.ITEM_FRAME_ITEM);
         itemEntry.itemStackProperty().addListener(stack -> updateItemData());
         getEntries().add(itemEntry);
-
-        itemDropChance = data.contains("ItemDropChance") ? data.getFloatOr("ItemDropChance", 1f) : 1f;
-        getEntries().add(new FloatEntryModel(this, ModTexts.ITEM_FRAME_DROP_CHANCE, itemDropChance, this::setItemDropChance));
-
-        itemRotation = Byte.toUnsignedInt(data.getByteOr("ItemRotation", (byte) 0));
-        getEntries().add(new IntegerEntryModel(this, ModTexts.ITEM_FRAME_ROTATION, itemRotation, this::setItemRotation, value -> value != null && value >= 0 && value <= 7));
 
         updateItemData();
     }
