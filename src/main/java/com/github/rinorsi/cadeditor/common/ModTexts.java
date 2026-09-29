@@ -3,6 +3,8 @@ package com.github.rinorsi.cadeditor.common;
 import com.github.franckyi.guapi.api.GuapiHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -46,6 +48,44 @@ public final class ModTexts {
     public static final MutableComponent DEBUG_MODE = GuapiHelper.translated("cadeditor.gui.debug_mode");
     public static final MutableComponent DEFAULT_POTION = GuapiHelper.translated("cadeditor.gui.default_potion");
     public static final MutableComponent DISPLAY = GuapiHelper.translated("cadeditor.gui.display");
+    public static final MutableComponent DISPLAY_ENTITY = GuapiHelper.translated("cadeditor.gui.display_entity");
+    public static final MutableComponent DISPLAY_BLOCK = GuapiHelper.translated("cadeditor.gui.display.block");
+    public static final MutableComponent DISPLAY_CONTEXT = GuapiHelper.translated("cadeditor.gui.display.context");
+    public static final MutableComponent DISPLAY_TRANSLATION_X = GuapiHelper.translated("cadeditor.gui.display.translation.x");
+    public static final MutableComponent DISPLAY_TRANSLATION_Y = GuapiHelper.translated("cadeditor.gui.display.translation.y");
+    public static final MutableComponent DISPLAY_TRANSLATION_Z = GuapiHelper.translated("cadeditor.gui.display.translation.z");
+    public static final MutableComponent DISPLAY_SCALE_X = GuapiHelper.translated("cadeditor.gui.display.scale.x");
+    public static final MutableComponent DISPLAY_SCALE_Y = GuapiHelper.translated("cadeditor.gui.display.scale.y");
+    public static final MutableComponent DISPLAY_SCALE_Z = GuapiHelper.translated("cadeditor.gui.display.scale.z");
+    public static final MutableComponent DISPLAY_LEFT_ROTATION_X = GuapiHelper.translated("cadeditor.gui.display.left_rotation.x");
+    public static final MutableComponent DISPLAY_LEFT_ROTATION_Y = GuapiHelper.translated("cadeditor.gui.display.left_rotation.y");
+    public static final MutableComponent DISPLAY_LEFT_ROTATION_Z = GuapiHelper.translated("cadeditor.gui.display.left_rotation.z");
+    public static final MutableComponent DISPLAY_LEFT_ROTATION_W = GuapiHelper.translated("cadeditor.gui.display.left_rotation.w");
+    public static final MutableComponent DISPLAY_RIGHT_ROTATION_X = GuapiHelper.translated("cadeditor.gui.display.right_rotation.x");
+    public static final MutableComponent DISPLAY_RIGHT_ROTATION_Y = GuapiHelper.translated("cadeditor.gui.display.right_rotation.y");
+    public static final MutableComponent DISPLAY_RIGHT_ROTATION_Z = GuapiHelper.translated("cadeditor.gui.display.right_rotation.z");
+    public static final MutableComponent DISPLAY_RIGHT_ROTATION_W = GuapiHelper.translated("cadeditor.gui.display.right_rotation.w");
+    public static final MutableComponent DISPLAY_INTERPOLATION_DURATION = GuapiHelper.translated("cadeditor.gui.display.interpolation_duration");
+    public static final MutableComponent DISPLAY_START_INTERPOLATION = GuapiHelper.translated("cadeditor.gui.display.start_interpolation");
+    public static final MutableComponent DISPLAY_TELEPORT_DURATION = GuapiHelper.translated("cadeditor.gui.display.teleport_duration");
+    public static final MutableComponent DISPLAY_BILLBOARD = GuapiHelper.translated("cadeditor.gui.display.billboard");
+    public static final MutableComponent DISPLAY_BRIGHTNESS_OVERRIDE = GuapiHelper.translated("cadeditor.gui.display.brightness_override");
+    public static final MutableComponent DISPLAY_BRIGHTNESS_BLOCK = GuapiHelper.translated("cadeditor.gui.display.brightness_block");
+    public static final MutableComponent DISPLAY_BRIGHTNESS_SKY = GuapiHelper.translated("cadeditor.gui.display.brightness_sky");
+    public static final MutableComponent DISPLAY_VIEW_RANGE = GuapiHelper.translated("cadeditor.gui.display.view_range");
+    public static final MutableComponent DISPLAY_SHADOW_RADIUS = GuapiHelper.translated("cadeditor.gui.display.shadow_radius");
+    public static final MutableComponent DISPLAY_SHADOW_STRENGTH = GuapiHelper.translated("cadeditor.gui.display.shadow_strength");
+    public static final MutableComponent DISPLAY_WIDTH = GuapiHelper.translated("cadeditor.gui.display.width");
+    public static final MutableComponent DISPLAY_HEIGHT = GuapiHelper.translated("cadeditor.gui.display.height");
+    public static final MutableComponent DISPLAY_GLOW_COLOR_OVERRIDE = GuapiHelper.translated("cadeditor.gui.display.glow_color_override");
+    public static final MutableComponent DISPLAY_TEXT = GuapiHelper.translated("cadeditor.gui.display.text");
+    public static final MutableComponent DISPLAY_LINE_WIDTH = GuapiHelper.translated("cadeditor.gui.display.line_width");
+    public static final MutableComponent DISPLAY_BACKGROUND = GuapiHelper.translated("cadeditor.gui.display.background");
+    public static final MutableComponent DISPLAY_TEXT_OPACITY = GuapiHelper.translated("cadeditor.gui.display.text_opacity");
+    public static final MutableComponent DISPLAY_SHADOW = GuapiHelper.translated("cadeditor.gui.display.shadow");
+    public static final MutableComponent DISPLAY_SEE_THROUGH = GuapiHelper.translated("cadeditor.gui.display.see_through");
+    public static final MutableComponent DISPLAY_DEFAULT_BACKGROUND = GuapiHelper.translated("cadeditor.gui.display.default_background");
+    public static final MutableComponent DISPLAY_ALIGNMENT = GuapiHelper.translated("cadeditor.gui.display.alignment");
     public static final MutableComponent ITEM_FRAME = GuapiHelper.translated("cadeditor.gui.item_frame");
     public static final MutableComponent ITEM_FRAME_ITEM = GuapiHelper.translated("cadeditor.gui.item_frame_item");
     public static final MutableComponent ITEM_FRAME_DROP_CHANCE = GuapiHelper.translated("cadeditor.gui.item_frame_drop_chance");
@@ -396,6 +436,18 @@ public final class ModTexts {
 
     public static MutableComponent direction(Direction direction) {
         return GuapiHelper.translated("cadeditor.gui.direction." + direction.getSerializedName());
+    }
+
+    public static MutableComponent displayBillboard(Display.BillboardConstraints billboard) {
+        return GuapiHelper.translated("cadeditor.gui.display.billboard." + billboard.getSerializedName());
+    }
+
+    public static MutableComponent displayContext(ItemDisplayContext context) {
+        return GuapiHelper.translated("cadeditor.gui.display.context." + context.getSerializedName());
+    }
+
+    public static MutableComponent displayAlignment(Display.TextDisplay.Align alignment) {
+        return GuapiHelper.translated("cadeditor.gui.display.alignment." + alignment.getSerializedName());
     }
 
     public static MutableComponent gui(String s) {

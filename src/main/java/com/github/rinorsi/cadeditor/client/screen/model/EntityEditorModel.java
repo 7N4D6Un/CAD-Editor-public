@@ -5,12 +5,15 @@ import com.github.rinorsi.cadeditor.client.context.EntityEditorContext;
 import com.github.rinorsi.cadeditor.client.screen.model.category.EditorCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityArmorStandCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityAttributesCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityBlockDisplayCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityEquipmentCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityGeneralCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityItemDisplayCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityItemFrameCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMannequinCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityMountCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntitySpawnSettingsCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityTextDisplayCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityTamingCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityVillagerDataCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.entity.EntityVillagerTradeCategoryModel;
@@ -25,6 +28,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
@@ -78,6 +82,7 @@ public class EntityEditorModel extends StandardEditorModel {
         if (isMannequin(entity)) {
             getCategories().add(new EntityMannequinCategoryModel(this));
         }
+        addDisplayCategory(entity);
         if (entity instanceof AbstractVillager) {
             getCategories().add(new EntityVillagerDataCategoryModel(this));
             getCategories().add(new EntityVillagerTradeCategoryModel(this));
@@ -159,6 +164,17 @@ public class EntityEditorModel extends StandardEditorModel {
             return false;
         }
         return "minecraft:mannequin".equals(tag.getStringOr("id", ""));
+    }
+
+    private void addDisplayCategory(Entity entity) {
+        String id = getContext().getTag() == null ? "" : getContext().getTag().getStringOr("id", "");
+        if (entity instanceof Display.BlockDisplay || "minecraft:block_display".equals(id)) {
+            getCategories().add(new EntityBlockDisplayCategoryModel(this));
+        } else if (entity instanceof Display.ItemDisplay || "minecraft:item_display".equals(id)) {
+            getCategories().add(new EntityItemDisplayCategoryModel(this));
+        } else if (entity instanceof Display.TextDisplay || "minecraft:text_display".equals(id)) {
+            getCategories().add(new EntityTextDisplayCategoryModel(this));
+        }
     }
 
     public void handleEntityReplaced(CompoundTag newTag) {
