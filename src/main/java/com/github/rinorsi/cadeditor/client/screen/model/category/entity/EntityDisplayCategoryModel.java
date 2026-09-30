@@ -54,14 +54,14 @@ public class EntityDisplayCategoryModel extends EntityCategoryModel {
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_SCALE_X, scaleX, this::setScaleX, value -> value != null && value != 0f));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_SCALE_Y, scaleY, this::setScaleY, value -> value != null && value != 0f));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_SCALE_Z, scaleZ, this::setScaleZ, value -> value != null && value != 0f));
-        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_X, leftRotationX, this::setLeftRotationX));
-        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_Y, leftRotationY, this::setLeftRotationY));
-        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_Z, leftRotationZ, this::setLeftRotationZ));
-        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_W, leftRotationW, this::setLeftRotationW));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_RIGHT_ROTATION_X, rightRotationX, this::setRightRotationX));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_RIGHT_ROTATION_Y, rightRotationY, this::setRightRotationY));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_RIGHT_ROTATION_Z, rightRotationZ, this::setRightRotationZ));
         getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_RIGHT_ROTATION_W, rightRotationW, this::setRightRotationW));
+        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_X, leftRotationX, this::setLeftRotationX));
+        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_Y, leftRotationY, this::setLeftRotationY));
+        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_Z, leftRotationZ, this::setLeftRotationZ));
+        getEntries().add(new FloatEntryModel(this, ModTexts.DISPLAY_LEFT_ROTATION_W, leftRotationW, this::setLeftRotationW));
         getEntries().add(new IntegerEntryModel(this, ModTexts.DISPLAY_INTERPOLATION_DURATION, data.getIntOr("interpolation_duration", 0),
                 this::setInterpolationDuration, value -> value != null && value >= 0));
         getEntries().add(new IntegerEntryModel(this, ModTexts.DISPLAY_START_INTERPOLATION, data.getIntOr("start_interpolation", 0),

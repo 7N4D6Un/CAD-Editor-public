@@ -49,7 +49,6 @@ public final class ModTexts {
     public static final MutableComponent DEFAULT_POTION = GuapiHelper.translated("cadeditor.gui.default_potion");
     public static final MutableComponent DISPLAY = GuapiHelper.translated("cadeditor.gui.display");
     public static final MutableComponent DISPLAY_ENTITY = GuapiHelper.translated("cadeditor.gui.display_entity");
-    public static final MutableComponent DISPLAY_BLOCK = GuapiHelper.translated("cadeditor.gui.display.block");
     public static final MutableComponent DISPLAY_CONTEXT = GuapiHelper.translated("cadeditor.gui.display.context");
     public static final MutableComponent DISPLAY_TRANSLATION_X = GuapiHelper.translated("cadeditor.gui.display.translation.x");
     public static final MutableComponent DISPLAY_TRANSLATION_Y = GuapiHelper.translated("cadeditor.gui.display.translation.y");

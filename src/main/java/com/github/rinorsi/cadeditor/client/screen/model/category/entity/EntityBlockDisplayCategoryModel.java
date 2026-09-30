@@ -30,7 +30,7 @@ public class EntityBlockDisplayCategoryModel extends EntityDisplayCategoryModel 
     @Override
     protected void setupEntries() {
         readState();
-        getEntries().add(new BlockSelectionEntryModel(this, ModTexts.DISPLAY_BLOCK, blockId, this::setBlockId));
+        getEntries().add(new BlockSelectionEntryModel(this, ModTexts.BLOCK_STATE, blockId, this::setBlockId));
         if (state != null) {
             addBlockProperties();
         }
