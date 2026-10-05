@@ -37,14 +37,9 @@ public class ItemSuspiciousStewEffectsCategoryModel extends ItemEditorCategoryMo
         this.stagedEffects = new ArrayList<>();
     }
 
-    @Override 
+    @Override
     protected void setupEntries() {
-        List<EffectData> effects = readEffects();
-        if (effects.isEmpty()) {
-            getEntries().add(createEffectEntry(null));
-            return;
-        }
-        for (EffectData e : effects) {
+        for (EffectData e : readEffects()) {
             getEntries().add(createEffectEntry(e));
         }
     }

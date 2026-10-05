@@ -60,11 +60,20 @@ public class ItemCommandBlockCategoryModel extends ItemEditorCategoryModel {
         }
         CompoundTag payload = root.copy();
         payload.remove("id");
-        stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(BlockEntityTypes.COMMAND_BLOCK, payload));
+        if (payload.isEmpty()) {
+            stack.remove(DataComponents.BLOCK_ENTITY_DATA);
+        } else {
+            stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(BlockEntityTypes.COMMAND_BLOCK, payload));
+        }
     }
 
     private void setCommand(String value) {
-        root.putString(KEY_COMMAND, value == null ? "" : value);
+        String command = value == null ? "" : value;
+        if (command.isEmpty()) {
+            root.remove(KEY_COMMAND);
+        } else {
+            root.putString(KEY_COMMAND, command);
+        }
     }
 
     private void setCustomName(String value) {

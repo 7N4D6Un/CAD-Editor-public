@@ -54,9 +54,13 @@ public class ItemBeehiveCategoryModel extends ItemEditorCategoryModel {
         int targetBees = Math.max(0, this.beeCountEntry.getValue());
         setBeesOnItem(stack, BeehiveNbtHelper.resizeBees(readBeesRaw(), targetBees));
         int honey = Math.max(0, Math.min(5, this.honeyLevelEntry.getValue()));
-        BlockItemStateProperties props = stack.get(DataComponents.BLOCK_STATE);
-        BlockItemStateProperties base = props == null ? BlockItemStateProperties.EMPTY : props;
-        stack.set(DataComponents.BLOCK_STATE, base.with(BeehiveBlock.HONEY_LEVEL, honey));
+        if (honey == 0) {
+            stack.remove(DataComponents.BLOCK_STATE);
+        } else {
+            BlockItemStateProperties props = stack.get(DataComponents.BLOCK_STATE);
+            BlockItemStateProperties base = props == null ? BlockItemStateProperties.EMPTY : props;
+            stack.set(DataComponents.BLOCK_STATE, base.with(BeehiveBlock.HONEY_LEVEL, honey));
+        }
     }
 
     private ItemStack getStack() {

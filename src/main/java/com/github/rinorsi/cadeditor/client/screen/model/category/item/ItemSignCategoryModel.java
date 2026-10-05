@@ -23,15 +23,19 @@ public class ItemSignCategoryModel extends ItemEditorCategoryModel {
     private CompoundTag backFace;
     private BooleanEntryModel waxedEntry;
     private final BlockEntityType<?> blockEntityType;
+    private final boolean hadComponent;
+    private final CompoundTag pristinePayload;
 
     public ItemSignCategoryModel(ItemEditorModel editor) {
         super(ModTexts.gui("sign"), editor);
         ItemStack stack = editor.getContext().getItemStack();
         this.blockEntityType = resolveBlockEntityType(stack);
         TypedEntityData<BlockEntityType<?>> data = stack == null ? null : stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        this.hadComponent = data != null;
         this.root = data == null ? new CompoundTag() : data.getUnsafe().copy();
         this.frontFace = SignNbtHelper.readFace(this.root, SignNbtHelper.KEY_FRONT_TEXT);
         this.backFace = SignNbtHelper.readFace(this.root, SignNbtHelper.KEY_BACK_TEXT);
+        this.pristinePayload = buildPayload();
     }
 
     private static BlockEntityType<?> resolveBlockEntityType(ItemStack stack) {
@@ -58,11 +62,20 @@ public class ItemSignCategoryModel extends ItemEditorCategoryModel {
         if (stack == null) {
             return;
         }
-        this.root.put(SignNbtHelper.KEY_FRONT_TEXT, this.frontFace);
-        this.root.put(SignNbtHelper.KEY_BACK_TEXT, this.backFace);
+        CompoundTag payload = buildPayload();
+        if (!this.hadComponent && payload.equals(this.pristinePayload)) {
+            stack.remove(DataComponents.BLOCK_ENTITY_DATA);
+        } else {
+            stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(this.blockEntityType, payload));
+        }
+    }
+
+    private CompoundTag buildPayload() {
         CompoundTag payload = this.root.copy();
+        payload.put(SignNbtHelper.KEY_FRONT_TEXT, this.frontFace.copy());
+        payload.put(SignNbtHelper.KEY_BACK_TEXT, this.backFace.copy());
         payload.remove("id");
-        stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(this.blockEntityType, payload));
+        return payload;
     }
 
     private void addFaceEntries(CompoundTag face, String titleKey) {

@@ -22,6 +22,8 @@ public class ItemTrialSpawnerCategoryModel extends ItemEditorCategoryModel {
     private static final BooleanProperty ALWAYS_VALID = BooleanProperty.create(true);
     private boolean ominous;
     private CompoundTag root;
+    private final boolean hadComponent;
+    private CompoundTag pristinePayload;
     private BooleanEntryModel ominousToggle;
     private EntityEntryModel entityEntry;
     private IntegerEntryModel spawnRangeEntry;
@@ -39,6 +41,7 @@ public class ItemTrialSpawnerCategoryModel extends ItemEditorCategoryModel {
         super(ModTexts.gui("trial_spawner"), editor);
         ItemStack stack = getParent().getContext().getItemStack();
         TypedEntityData<net.minecraft.world.level.block.entity.BlockEntityType<?>> data = stack == null ? null : stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        this.hadComponent = data != null;
         this.root = data == null ? new CompoundTag() : data.getUnsafe().copy();
         this.ominous = false;
     }
@@ -57,6 +60,8 @@ public class ItemTrialSpawnerCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(requiredPlayerRangeEntry);
         buildConfigEntries(TrialSpawnerNbtHelper.loadConfig(root, configKey()));
         insertConfigEntries();
+        commitToRoot();
+        this.pristinePayload = snapshotPayload();
     }
 
     @Override
@@ -133,9 +138,18 @@ public class ItemTrialSpawnerCategoryModel extends ItemEditorCategoryModel {
         if (stack == null) {
             return;
         }
-        CompoundTag payload = root.copy();
+        CompoundTag payload = snapshotPayload();
+        if (!this.hadComponent && payload.equals(this.pristinePayload)) {
+            stack.remove(DataComponents.BLOCK_ENTITY_DATA);
+        } else {
+            stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(BlockEntityTypes.TRIAL_SPAWNER, payload));
+        }
+    }
+
+    private CompoundTag snapshotPayload() {
+        CompoundTag payload = this.root.copy();
         payload.remove("id");
-        stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(BlockEntityTypes.TRIAL_SPAWNER, payload));
+        return payload;
     }
 
     private void commitToRoot() {
