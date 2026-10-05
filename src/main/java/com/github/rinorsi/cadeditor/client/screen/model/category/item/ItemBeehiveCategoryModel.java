@@ -16,11 +16,15 @@ import net.minecraft.world.item.component.Bees;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.BeehiveBlock;
 
+import java.util.Objects;
+
 public class ItemBeehiveCategoryModel extends ItemEditorCategoryModel {
     private static final String BEES_COMPONENT = "minecraft:bees";
 
     private IntegerEntryModel beeCountEntry;
     private IntegerEntryModel honeyLevelEntry;
+    private boolean beesPatched;
+    private boolean blockStatePatched;
 
     public ItemBeehiveCategoryModel(ItemEditorModel editor) {
         super(ModTexts.gui("beehive"), editor);
@@ -36,6 +40,10 @@ public class ItemBeehiveCategoryModel extends ItemEditorCategoryModel {
             Integer value = props.get(BeehiveBlock.HONEY_LEVEL);
             honey = value == null ? 0 : value;
         }
+        this.beesPatched = !Objects.equals(stack == null ? null : stack.get(DataComponents.BEES),
+                stack == null ? null : stack.getItem().components().get(DataComponents.BEES));
+        this.blockStatePatched = !Objects.equals(props,
+                stack == null ? null : stack.getItem().components().get(DataComponents.BLOCK_STATE));
         this.beeCountEntry = new IntegerEntryModel(this, ModTexts.gui("bee_count"), Math.max(0, beeCount), value -> {
         }, BeehiveNbtHelper.INT_COUNT);
         this.honeyLevelEntry = new IntegerEntryModel(this, ModTexts.gui("honey_level"), honey, value -> {
@@ -55,7 +63,9 @@ public class ItemBeehiveCategoryModel extends ItemEditorCategoryModel {
         setBeesOnItem(stack, BeehiveNbtHelper.resizeBees(readBeesRaw(), targetBees));
         int honey = Math.max(0, Math.min(5, this.honeyLevelEntry.getValue()));
         if (honey == 0) {
-            stack.remove(DataComponents.BLOCK_STATE);
+            if (this.blockStatePatched) {
+                stack.remove(DataComponents.BLOCK_STATE);
+            }
         } else {
             BlockItemStateProperties props = stack.get(DataComponents.BLOCK_STATE);
             BlockItemStateProperties base = props == null ? BlockItemStateProperties.EMPTY : props;
@@ -94,7 +104,9 @@ public class ItemBeehiveCategoryModel extends ItemEditorCategoryModel {
             data.put("components", components);
         }
         if (bees.isEmpty()) {
-            stack.remove(DataComponents.BEES);
+            if (this.beesPatched) {
+                stack.remove(DataComponents.BEES);
+            }
             return;
         }
         try {
