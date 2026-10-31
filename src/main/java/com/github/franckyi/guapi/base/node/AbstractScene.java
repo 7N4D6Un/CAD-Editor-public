@@ -89,7 +89,7 @@ public abstract class AbstractScene implements Scene {
             }
         });
         addListener(ScreenEventType.KEY_PRESSED, e -> {
-            if (e.getKeyCode() == 256 && isCloseOnEsc()) {
+            if (e.getKeyCode() == 41 && isCloseOnEsc()) {
                 Guapi.getScreenHandler().hideScene();
                 e.consume();
             }
@@ -220,7 +220,7 @@ public abstract class AbstractScene implements Scene {
                 if (!e.isConsumed()) {
                     if (e instanceof MouseButtonEvent) {
                         MouseButtonEvent be = (MouseButtonEvent) e;
-                        if (target == ScreenEventType.MOUSE_CLICKED && be.getButton() == 0) {
+                        if (target == ScreenEventType.MOUSE_CLICKED && be.getButton() == 1) {
                             if (e.getTarget() != null && !e.getTarget().isDisabled() && e.getTarget().isVisible()) {
                                 e.getTarget().handleEvent(ScreenEventType.ACTION, be);
                                 if (!e.isConsumed()) {

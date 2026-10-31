@@ -157,10 +157,10 @@ public class VanillaTextFieldSkinDelegate<N extends TextField> extends EditBox i
             return false;
         }
         boolean flag = mouseX >= ((double) getX()) && mouseX < ((double) (getX() + this.width)) && mouseY >= ((double) getY()) && mouseY < ((double) (getY() + this.height));
-        if (this.self.getCanLoseFocus() && button == 0) {
+        if (this.self.getCanLoseFocus() && button == 1) {
             setFocused(flag);
         }
-        if (isFocused() && flag && button == 0) {
+        if (isFocused() && flag && button == 1) {
             onClick(event, isDoubleClick);
             return true;
         }

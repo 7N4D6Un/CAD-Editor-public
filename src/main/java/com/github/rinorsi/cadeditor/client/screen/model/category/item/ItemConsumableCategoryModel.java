@@ -95,7 +95,9 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
         String playNamespace = playSoundId.contains(":") ? playSoundId.substring(0, playSoundId.indexOf(58)) : "minecraft";
         this.playSoundEntry = new SoundEventSelectionEntryModel(this, ModTexts.gui("consumable_play_sound"), playSoundId, this::applyPlaySoundId, "namespace:" + playNamespace);
         entries.add(this.playSoundEntry);
+        entries.add(new SpacerEntryModel(this));
         entries.add(new BooleanEntryModel(this, ModTexts.gui("consumable_teleport_randomly"), this.state.isTeleportRandomlyEnabled(), this.state::setTeleportRandomlyEnabled));
+        entries.add(new BooleanEntryModel(this, ModTexts.gui("consumable_teleport_particles"), this.state.isTeleportDirectionalParticles(), this.state::setTeleportDirectionalParticles));
         entries.add(new FloatEntryModel(this, ModTexts.gui("consumable_teleport_diameter"), this.state.getTeleportDiameter(), this.state::setTeleportDiameter));
         entries.add(new SpacerEntryModel(this));
         this.state.getEffects().forEach(effect -> {
@@ -118,16 +120,17 @@ public class ItemConsumableCategoryModel extends ItemEditorCategoryModel {
     @Override
     public int getEntryListStart() {
         List<EntryModel> entries = getEntries();
+        int spacerIndex = -1;
         for (int i = 0; i < entries.size(); i++) {
             EntryModel entry = entries.get(i);
             if (entry instanceof FoodEffectEntryModel) {
                 return i;
             }
             if (entry instanceof SpacerEntryModel) {
-                return i + 1;
+                spacerIndex = i;
             }
         }
-        return -1;
+        return spacerIndex >= 0 ? spacerIndex + 1 : -1;
     }
 
     @Override

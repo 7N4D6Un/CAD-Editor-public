@@ -148,6 +148,20 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         return ClientUtil.parseItemStack(edited);
     }
 
+    private static void migrateLegacySwingAnimation(CompoundTag root) {
+        CompoundTag components = root.getCompound("components").orElse(null);
+        if (components == null || !(components.get("minecraft:swing_animation") instanceof CompoundTag legacy)) {
+            return;
+        }
+        components.remove("minecraft:swing_animation");
+        if (!components.contains("minecraft:attack_animation")) {
+            components.put("minecraft:attack_animation", legacy.copy());
+        }
+        if (!components.contains("minecraft:interact_animation")) {
+            components.put("minecraft:interact_animation", legacy.copy());
+        }
+    }
+
     @Override
     public void update() {
         ItemStack result = this.itemStack.copy();
@@ -155,6 +169,7 @@ public class ItemEditorContext extends EditorContext<ItemEditorContext> {
         HolderLookup.Provider lookup = ClientUtil.registryAccess();
         if (edited != null) {
             try {
+                migrateLegacySwingAnimation(edited);
                 ItemStack parsed = decodeStack(lookup, edited);
                 if (!parsed.isEmpty()) {
                     result = parsed;

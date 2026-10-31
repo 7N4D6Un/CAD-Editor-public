@@ -73,7 +73,7 @@ public class VanillaTextAreaSkinDelegate<N extends TextArea> implements VanillaW
     }
 
     public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
-        if (isWithinContentArea(event.x(), event.y()) && event.button() == 0) {
+        if (isWithinContentArea(event.x(), event.y()) && event.button() == 1) {
             this.self.getTextField().setSelecting((event.modifiers() & 1) != 0);
             this.self.invokeSeekCursorScreen(event.x(), event.y());
             return true;

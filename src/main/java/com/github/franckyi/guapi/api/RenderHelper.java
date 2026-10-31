@@ -106,6 +106,6 @@ public final class RenderHelper {
         image.ifPresent(extra -> {
             components.add(components.isEmpty() ? 0 : 1, ClientTooltipComponent.create(extra));
         });
-        guiGraphicsExtractor.tooltip(font, components, x, y, DefaultTooltipPositioner.INSTANCE, (Identifier) null);
+        guiGraphicsExtractor.tooltip(font, components, x, y, DefaultTooltipPositioner.INSTANCE, (Identifier) null, false);
     }
 }

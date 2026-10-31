@@ -245,7 +245,6 @@ public final class ModTexts {
     public static final MutableComponent MAP = GuapiHelper.translated("cadeditor.gui.map");
     public static final MutableComponent MAP_ID_TOGGLE = GuapiHelper.translated("cadeditor.gui.map_id_toggle");
     public static final MutableComponent MAP_ID_VALUE = GuapiHelper.translated("cadeditor.gui.map_id_value");
-    public static final MutableComponent MAP_COLOR = GuapiHelper.translated("cadeditor.gui.map_color");
     public static final MutableComponent MAP_LOCK = GuapiHelper.translated("cadeditor.gui.map_lock");
     public static final MutableComponent MAP_DECORATION = GuapiHelper.translated("cadeditor.gui.map_decoration");
     public static final MutableComponent MAP_DECORATION_NAME = GuapiHelper.translated("cadeditor.gui.map_decoration_name");

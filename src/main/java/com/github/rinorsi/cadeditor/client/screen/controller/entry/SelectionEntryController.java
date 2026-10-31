@@ -21,6 +21,9 @@ public class SelectionEntryController<M extends SelectionEntryModel, V extends S
         super.bind();
         ((SelectionEntryView) this.view).getTextField().setPlaceholder(this.model.getSelectionScreenTitle());
         ((SelectionEntryView) this.view).getTextField().getSuggestions().setAll(this.model.getSuggestions());
+        if (this.model.getValidator() != null) {
+            ((SelectionEntryView) this.view).getTextField().setValidator(this.model.getValidator());
+        }
         ((SelectionEntryView) this.view).getSelectionScreenButton().getTooltip().add(ModTexts.choose(this.model.getSelectionScreenTitle()));
         ((SelectionEntryView) this.view).getSelectionScreenButton().onAction(this::openSelectionScreen);
         if (this.model.getLabel() == null || this.model.getLabel().getString().isEmpty()) {

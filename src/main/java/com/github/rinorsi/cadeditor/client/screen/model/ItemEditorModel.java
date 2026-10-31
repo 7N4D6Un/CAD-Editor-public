@@ -29,6 +29,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemExtraT
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemFireworkStarCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemFireworksCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemFoodEffectsCategoryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemBlockUseBehaviorCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemGeneralCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemHideFlagsCategoryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.category.item.ItemInstrumentCategoryModel;
@@ -204,6 +205,7 @@ public class ItemEditorModel extends StandardEditorModel {
         getCategories().add(new ItemConsumableCategoryModel(this));
         getCategories().add(new ItemUseRemainderCategoryModel(this));
         getCategories().add(new ItemUseBehaviorCategoryModel(this));
+        getCategories().add(new ItemBlockUseBehaviorCategoryModel(this));
         getCategories().add(new ItemDeathProtectionCategoryModel(this));
         getCategories().add(new ItemAttributeModifiersCategoryModel(this));
         getCategories().add(new ItemHideFlagsCategoryModel(this));
@@ -233,7 +235,7 @@ public class ItemEditorModel extends StandardEditorModel {
         if (isSignItem(item)) {
             getCategories().add(new ItemSignCategoryModel(this));
         }
-        if ((item instanceof MapItem) || stack.has(DataComponents.MAP_ID) || stack.has(DataComponents.MAP_COLOR) || stack.has(DataComponents.MAP_DECORATIONS) || stack.has(DataComponents.MAP_POST_PROCESSING)) {
+        if ((item instanceof MapItem) || stack.has(DataComponents.MAP_ID) || stack.has(DataComponents.MAP_DECORATIONS) || stack.has(DataComponents.MAP_POST_PROCESSING)) {
             getCategories().add(new ItemMapCategoryModel(this));
             getCategories().add(new ItemMapDecorationsCategoryModel(this));
         }

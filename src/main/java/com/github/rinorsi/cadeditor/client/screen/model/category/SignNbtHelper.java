@@ -2,12 +2,15 @@ package com.github.rinorsi.cadeditor.client.screen.model.category;
 
 import com.github.rinorsi.cadeditor.client.ClientUtil;
 import com.github.rinorsi.cadeditor.client.util.ComponentJsonHelper;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.entity.SignText;
 
 public final class SignNbtHelper {
     public static final String KEY_FRONT_TEXT = "front_text";
@@ -68,5 +71,28 @@ public final class SignNbtHelper {
 
     public static boolean readWaxed(CompoundTag root) {
         return root != null && root.getBooleanOr(KEY_IS_WAXED, false);
+    }
+
+    public static CompoundTag fromSignText(SignText text) {
+        CompoundTag face = new CompoundTag();
+        ListTag messages = new ListTag();
+        List<Component> lines = text.getMessages(false);
+        for (int index = 0; index < LINES; index++) {
+            Component line = index < lines.size() ? lines.get(index) : Component.empty();
+            Tag encoded = ComponentJsonHelper.encodeToTag(line, ClientUtil.registryAccess());
+            messages.add(encoded == null ? net.minecraft.nbt.StringTag.valueOf("\"\"") : encoded);
+        }
+        face.put(KEY_MESSAGES, messages);
+        face.putString(KEY_COLOR, text.getColor().getName());
+        face.putBoolean(KEY_HAS_GLOWING_TEXT, text.hasGlowingText());
+        return face;
+    }
+
+    public static SignText toSignText(CompoundTag face) {
+        List<Component> messages = new ArrayList<>(LINES);
+        for (int index = 0; index < LINES; index++) {
+            messages.add(readLine(face, index));
+        }
+        return new SignText(messages, messages, readColor(face), readGlowing(face));
     }
 }

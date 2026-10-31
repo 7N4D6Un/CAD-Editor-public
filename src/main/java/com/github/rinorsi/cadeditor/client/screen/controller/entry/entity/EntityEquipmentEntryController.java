@@ -69,7 +69,7 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
                 return;
             }
             int key = event.getKeyCode();
-            if (key != 265 && key != 264) {
+            if (key != 82 && key != 81) {
                 return;
             }
             String text = ((EntityEquipmentEntryView) this.view).getDropChanceField().getText();
@@ -83,7 +83,7 @@ public class EntityEquipmentEntryController extends EntryController<EntityEquipm
             } else if (event.isControlKeyDown()) {
                 step = 0.01f;
             }
-            if (key == 264) {
+            if (key == 81) {
                 step = -step;
             }
             float next = Math.max(0.0f, Math.min(EntityEquipmentCategoryModel.MAX_DROP_CHANCE, current + step));

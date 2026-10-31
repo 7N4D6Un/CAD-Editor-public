@@ -21,7 +21,7 @@ public class ItemContainerGridCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getParent().getContext().getItemStack();
         ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
         if (contents != null) {
-            contents.allItemsCopyStream().forEach(item -> getEntries().add(new ItemContainerSlotEntryModel(this, item)));
+            contents.itemCopies().forEach(item -> getEntries().add(new ItemContainerSlotEntryModel(this, item)));
         }
     }
 

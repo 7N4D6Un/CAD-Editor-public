@@ -8,6 +8,7 @@ import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.SpacerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.FoodEffectEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.SoundEventSelectionEntryModel;
@@ -48,6 +49,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
     private String playSoundId = "";
     private boolean teleportRandomlyEnabled = false;
     private float teleportDiameter = 16.0f;
+    private boolean teleportDirectionalParticles = true;
     private BooleanEntryModel behaviorToggle;
     private SoundEventSelectionEntryModel playSoundEntry;
     private StringWithActionsEntryModel removeEffectsEntry;
@@ -77,7 +79,9 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
         String namespace = this.playSoundId.contains(":") ? this.playSoundId.substring(0, this.playSoundId.indexOf(58)) : "minecraft";
         this.playSoundEntry = new SoundEventSelectionEntryModel(this, ModTexts.gui("death_protection_play_sound"), this.playSoundId, this::applyPlaySoundId, "namespace:" + namespace);
         getEntries().add(this.playSoundEntry);
+        getEntries().add(new SpacerEntryModel(this));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("death_protection_teleport_randomly"), this.teleportRandomlyEnabled, value -> this.teleportRandomlyEnabled = value != null && value));
+        getEntries().add(new BooleanEntryModel(this, ModTexts.gui("death_protection_teleport_particles"), this.teleportDirectionalParticles, value -> this.teleportDirectionalParticles = value != null && value));
         getEntries().add(new FloatEntryModel(this, ModTexts.gui("death_protection_teleport_diameter"), this.teleportDiameter, value -> this.teleportDiameter = value == null ? 16.0f : Math.max(0.05f, value)));
         this.initialEffects.forEach(effect -> {
             getEntries().add(createEffectEntry(effect));
@@ -107,7 +111,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
 
     @Override 
     public int getEntryListStart() {
-        return 6;
+        return 8;
     }
 
     @Override 
@@ -175,7 +179,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
             }
         }
         if (this.teleportRandomlyEnabled) {
-            effects.add(new TeleportRandomlyConsumeEffect(Math.max(0.05f, this.teleportDiameter)));
+            effects.add(new TeleportRandomlyConsumeEffect(Math.max(0.05f, this.teleportDiameter), this.teleportDirectionalParticles));
         }
         if (effects.isEmpty()) {
             stack.remove(DataComponents.DEATH_PROTECTION);
@@ -192,6 +196,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
         this.playSoundId = "";
         this.teleportRandomlyEnabled = false;
         this.teleportDiameter = 16.0f;
+        this.teleportDirectionalParticles = true;
         ItemStack stack = getParent().getContext().getItemStack();
         DeathProtection component = stack.get(DataComponents.DEATH_PROTECTION);
         if (component != null) {
@@ -215,6 +220,7 @@ public class ItemDeathProtectionCategoryModel extends ItemEditorCategoryModel {
                 } else if (effectElement instanceof TeleportRandomlyConsumeEffect teleport) {
                     this.teleportRandomlyEnabled = true;
                     this.teleportDiameter = teleport.diameter();
+                    this.teleportDirectionalParticles = teleport.directionalParticles();
                 }
             }
         } else {

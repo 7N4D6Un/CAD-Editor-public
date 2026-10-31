@@ -44,6 +44,7 @@ public class ConsumableState {
     private Optional<Holder<SoundEvent>> playSound = Optional.empty();
     private boolean teleportRandomlyEnabled = false;
     private float teleportDiameter = 16.0f;
+    private boolean teleportDirectionalParticles = true;
 
     public void loadFrom(ItemStack stack) {
         Consumable consumable = (Consumable) stack.get(DataComponents.CONSUMABLE);
@@ -60,10 +61,12 @@ public class ConsumableState {
         this.playSound = consumable.onConsumeEffects().stream().filter(PlaySoundConsumeEffect.class::isInstance).map(PlaySoundConsumeEffect.class::cast).map(PlaySoundConsumeEffect::sound).findFirst();
         this.teleportRandomlyEnabled = false;
         this.teleportDiameter = 16.0f;
+        this.teleportDirectionalParticles = true;
         for (ConsumeEffect effect : consumable.onConsumeEffects()) {
             if (effect instanceof TeleportRandomlyConsumeEffect teleport) {
                 this.teleportRandomlyEnabled = true;
                 this.teleportDiameter = teleport.diameter();
+                this.teleportDirectionalParticles = teleport.directionalParticles();
             }
         }
         Class<ApplyStatusEffectsConsumeEffect> cls = ApplyStatusEffectsConsumeEffect.class;
@@ -98,6 +101,7 @@ public class ConsumableState {
         this.playSound = Optional.empty();
         this.teleportRandomlyEnabled = false;
         this.teleportDiameter = 16.0f;
+        this.teleportDirectionalParticles = true;
     }
 
     public float getConsumeSeconds() {
@@ -232,6 +236,14 @@ public class ConsumableState {
         this.teleportDiameter = Float.isNaN(value) ? 16.0f : Math.max(0.05f, value);
     }
 
+    public boolean isTeleportDirectionalParticles() {
+        return this.teleportDirectionalParticles;
+    }
+
+    public void setTeleportDirectionalParticles(boolean value) {
+        this.teleportDirectionalParticles = value;
+    }
+
     public Consumable buildConsumable(List<ConsumeEffect> statusEffects) {
         Consumable.Builder builder = Consumable.builder().consumeSeconds(Math.max(0.05f, this.consumeSeconds)).hasConsumeParticles(this.hasConsumeParticles).animation(this.animation);
         this.consumeSound.ifPresent(builder::sound);
@@ -244,7 +256,7 @@ public class ConsumableState {
         }
         this.playSound.ifPresent(holder -> builder.onConsume(new PlaySoundConsumeEffect(holder)));
         if (this.teleportRandomlyEnabled) {
-            builder.onConsume(new TeleportRandomlyConsumeEffect(Math.max(0.05f, this.teleportDiameter)));
+            builder.onConsume(new TeleportRandomlyConsumeEffect(Math.max(0.05f, this.teleportDiameter), this.teleportDirectionalParticles));
         }
         for (ConsumeEffect statusEffect : statusEffects) {
             builder.onConsume(statusEffect);

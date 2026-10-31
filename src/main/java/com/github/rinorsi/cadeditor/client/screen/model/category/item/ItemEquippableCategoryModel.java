@@ -8,7 +8,9 @@ import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.BooleanEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.EnumEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.FloatEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.LabeledEntryModel;
+import com.github.rinorsi.cadeditor.client.screen.model.entry.SpacerEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.EquipmentAssetSelectionEntryModel;
@@ -38,6 +40,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.MobVisibility;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.item.equipment.Equippable;
@@ -48,6 +51,7 @@ import net.minecraft.util.Unit;
 
 
 public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
+    private static final float DEFAULT_MOB_VISIBILITY = 0.5f;
     private EquipmentSlot slot;
     private String equipSoundId;
     private String assetId;
@@ -60,6 +64,10 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
     private String shearingSoundId;
     private StringWithActionsEntryModel allowedEntitiesEntry;
     private String allowedEntitiesRaw = "";
+    private StringWithActionsEntryModel mobVisibilityEntitiesEntry;
+    private String mobVisibilityEntitiesRaw = "";
+    private FloatEntryModel mobVisibilityValueEntry;
+    private float mobVisibility = DEFAULT_MOB_VISIBILITY;
     private SoundEventSelectionEntryModel equipSoundEntry;
     private SoundEventSelectionEntryModel shearingSoundEntry;
     private EquipmentAssetSelectionEntryModel assetEntry;
@@ -91,7 +99,7 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         this.assetEntry = new EquipmentAssetSelectionEntryModel(this, ModTexts.EQUIPMENT_ASSET, this.assetId, this::setAssetId);
         getEntries().add(this.assetEntry);
         this.overlayEntry = new StringEntryModel(this, ModTexts.gui("equippable_camera_overlay"), this.cameraOverlayId, this::setCameraOverlayId);
-        this.overlayEntry.setPlaceholder("minecraft:spyglass_overlay");
+        this.overlayEntry.setPlaceholder("minecraft:misc/spyglass_scope");
         getEntries().add(this.overlayEntry);
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("equippable_dispensable"), this.dispensable, value -> this.dispensable = value));
         getEntries().add(new BooleanEntryModel(this, ModTexts.gui("equippable_swappable"), this.swappable, value -> this.swappable = value));
@@ -118,6 +126,14 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         this.allowedEntitiesEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_entity"), this::openAllowedEntitySelection));
         this.allowedEntitiesEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_tag"), this::openAllowedEntityTagSelection));
         getEntries().add(this.allowedEntitiesEntry);
+        getEntries().add(new SpacerEntryModel(this));
+        this.mobVisibilityEntitiesEntry = withWikiTooltip(new StringWithActionsEntryModel(this, ModTexts.gui("mob_visibility_entities"), this.mobVisibilityEntitiesRaw, this::setMobVisibilityEntitiesRaw), "mob_visibility_entities", 2);
+        this.mobVisibilityEntitiesEntry.setPlaceholder("minecraft:zombie 或 #minecraft:undead");
+        this.mobVisibilityEntitiesEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_entity"), this::openMobVisibilityEntitySelection));
+        this.mobVisibilityEntitiesEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_tag"), this::openMobVisibilityTagSelection));
+        getEntries().add(this.mobVisibilityEntitiesEntry);
+        this.mobVisibilityValueEntry = withWikiTooltip(new FloatEntryModel(this, ModTexts.gui("mob_visibility_value"), this.mobVisibility, value -> this.mobVisibility = value == null ? DEFAULT_MOB_VISIBILITY : value, value -> value != null && value >= MobVisibility.MIN_VISIBILITY && value <= MobVisibility.MAX_VISIBILITY), "mob_visibility_value", 2);
+        getEntries().add(this.mobVisibilityValueEntry);
         syncEntriesEnabled();
     }
 
@@ -182,6 +198,9 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
         builder.setCanBeSheared(this.canBeSheared);
         shearingSoundHolder.ifPresent(builder::setShearingSound);
         stack.set(DataComponents.EQUIPPABLE, builder.build());
+        if (!applyMobVisibility(entityLookup, stack)) {
+            return;
+        }
         applyTrimComponent(stack);
     }
 
@@ -248,6 +267,101 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
             return Optional.empty();
         }
         return lookup.get(TagKey.create(Registries.ENTITY_TYPE, rl)).map(named -> (HolderSet<EntityType<?>>) named);
+    }
+
+    private boolean applyMobVisibility(HolderLookup.RegistryLookup<EntityType<?>> lookup, ItemStack stack) {
+        if (this.mobVisibilityEntitiesRaw.isBlank()) {
+            this.mobVisibilityEntitiesEntry.setValid(true);
+            stack.remove(DataComponents.MOB_VISIBILITY);
+            getParent().removeComponentFromDataTag("minecraft:mob_visibility");
+            return true;
+        }
+        HolderSet<EntityType<?>> targeting = resolveMobVisibilityEntities(lookup);
+        if (targeting == null) {
+            this.mobVisibilityEntitiesEntry.setValid(false);
+            return false;
+        }
+        this.mobVisibilityEntitiesEntry.setValid(true);
+        stack.set(DataComponents.MOB_VISIBILITY, new MobVisibility(targeting, this.mobVisibility));
+        return true;
+    }
+
+    private HolderSet<EntityType<?>> resolveMobVisibilityEntities(HolderLookup.RegistryLookup<EntityType<?>> lookup) {
+        List<String> entries = parseIdentifierList(this.mobVisibilityEntitiesRaw);
+        if (entries.isEmpty()) {
+            return null;
+        }
+        List<String> tagIds = new ArrayList<>();
+        List<String> entityIds = new ArrayList<>();
+        for (String entry : entries) {
+            if (entry.startsWith("#")) {
+                String tagId = entry.substring(1);
+                if (!tagId.isBlank()) {
+                    tagIds.add(tagId);
+                }
+            } else if (!entry.isBlank()) {
+                entityIds.add(entry);
+            }
+        }
+        if (entityIds.isEmpty() && tagIds.size() == 1) {
+            if (lookup == null) {
+                return null;
+            }
+            return resolveNamedEntityTypeTag(lookup, tagIds.get(0)).orElse(null);
+        }
+        List<Holder<EntityType<?>>> holders = new ArrayList<>();
+        if (lookup != null) {
+            for (String tagId : tagIds) {
+                resolveNamedEntityTypeTag(lookup, tagId).ifPresent(named -> named.stream().forEach(holders::add));
+            }
+            for (String entityId : entityIds) {
+                Identifier rl = tryParse(entityId);
+                if (rl != null) {
+                    lookup.get(ResourceKey.create(Registries.ENTITY_TYPE, rl)).ifPresent(holders::add);
+                }
+            }
+        }
+        return holders.isEmpty() ? null : HolderSet.direct(holders);
+    }
+
+    private void setMobVisibilityEntitiesRaw(String value) {
+        this.mobVisibilityEntitiesRaw = value == null ? "" : value.trim();
+    }
+
+    private void openMobVisibilityEntitySelection() {
+        Set<Identifier> initiallySelected = extractEntityIds(this.mobVisibilityEntitiesRaw);
+        ModScreenHandler.openListSelectionScreen(ModTexts.gui("select_entity"), "equippable_mob_visibility_entities", ClientCache.getEntitySelectionItems(), null, true, selected -> {
+            List<String> entries = new ArrayList<>();
+            for (String entry : parseIdentifierList(this.mobVisibilityEntitiesRaw)) {
+                if (entry.startsWith("#")) {
+                    entries.add(entry);
+                }
+            }
+            for (Identifier rl : selected) {
+                entries.add(rl.toString());
+            }
+            String joined = String.join(", ", entries).trim();
+            this.mobVisibilityEntitiesRaw = joined;
+            this.mobVisibilityEntitiesEntry.setValue(joined);
+        }, initiallySelected);
+    }
+
+    private void openMobVisibilityTagSelection() {
+        Set<Identifier> initiallySelected = extractTagIds(this.mobVisibilityEntitiesRaw);
+        ModScreenHandler.openListSelectionScreen(ModTexts.gui("select_tag"), "equippable_mob_visibility_entity_tags", ClientCache.getEntityTypeTagSelectionItems(), null, true, selected -> {
+            List<String> entries = new ArrayList<>();
+            for (String entry : parseIdentifierList(this.mobVisibilityEntitiesRaw)) {
+                if (!entry.startsWith("#")) {
+                    entries.add(entry);
+                }
+            }
+            for (Identifier rl : selected) {
+                entries.add("#" + rl);
+            }
+            String joined = String.join(", ", entries).trim();
+            this.mobVisibilityEntitiesRaw = joined;
+            this.mobVisibilityEntitiesEntry.setValue(joined);
+        }, initiallySelected);
     }
 
     private void setAllowedEntitiesRaw(String value) {
@@ -388,6 +502,9 @@ public class ItemEquippableCategoryModel extends ItemEditorCategoryModel {
 
     private void loadStateFromStack() {
         ItemStack stack = getParent().getContext().getItemStack();
+        MobVisibility mobVisibility = stack.get(DataComponents.MOB_VISIBILITY);
+        this.mobVisibilityEntitiesRaw = mobVisibility == null ? "" : serializeAllowedEntities(mobVisibility.targetingEntityTypes());
+        this.mobVisibility = mobVisibility == null ? DEFAULT_MOB_VISIBILITY : mobVisibility.visibility();
         Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
         if (equippable == null) {
             this.slot = EquipmentSlot.HEAD;

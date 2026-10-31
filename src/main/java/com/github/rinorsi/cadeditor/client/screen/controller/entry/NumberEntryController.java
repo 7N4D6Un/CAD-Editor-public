@@ -32,7 +32,7 @@ public class NumberEntryController<N extends Number> extends ValueEntryControlle
                 return;
             }
             int keyCode = event.getKeyCode();
-            if (keyCode != 265 && keyCode != 264) {
+            if (keyCode != 82 && keyCode != 81) {
                 return;
             }
             String currentText = ((NumberEntryView) this.view).getTextField().getText();
@@ -47,7 +47,7 @@ public class NumberEntryController<N extends Number> extends ValueEntryControlle
                 } else if (event.isControlKeyDown()) {
                     step = ((NumberEntryModel) this.model).getArrowStepCtrl();
                 }
-                if (keyCode == 264) {
+                if (keyCode == 81) {
                     step = -step;
                 }
                 Number numberOffsetValue = ((NumberEntryModel) this.model).offsetValue(number, step);

@@ -11,45 +11,46 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.BlockEntityTypes;
+import net.minecraft.world.level.block.entity.SignText;
 
 public class ItemSignCategoryModel extends ItemEditorCategoryModel {
-    private CompoundTag root;
-    private CompoundTag frontFace;
-    private CompoundTag backFace;
+    private static final String BLOCK_ENTITY_DATA_KEY = "minecraft:block_entity_data";
+    private static final String COMPONENTS_KEY = "components";
+    private static final String ID_KEY = "id";
+    private final CompoundTag frontFace;
+    private final CompoundTag backFace;
+    private final boolean initiallyWaxed;
     private BooleanEntryModel waxedEntry;
-    private final BlockEntityType<?> blockEntityType;
-    private final boolean hadComponent;
-    private final CompoundTag pristinePayload;
 
     public ItemSignCategoryModel(ItemEditorModel editor) {
         super(ModTexts.gui("sign"), editor);
         ItemStack stack = editor.getContext().getItemStack();
-        this.blockEntityType = resolveBlockEntityType(stack);
-        TypedEntityData<BlockEntityType<?>> data = stack == null ? null : stack.get(DataComponents.BLOCK_ENTITY_DATA);
-        this.hadComponent = data != null;
-        this.root = data == null ? new CompoundTag() : data.getUnsafe().copy();
-        this.frontFace = SignNbtHelper.readFace(this.root, SignNbtHelper.KEY_FRONT_TEXT);
-        this.backFace = SignNbtHelper.readFace(this.root, SignNbtHelper.KEY_BACK_TEXT);
-        this.pristinePayload = buildPayload();
+        CompoundTag legacy = legacyPayload(stack);
+        SignText frontText = stack == null ? null : stack.get(DataComponents.SIGN_TEXT_FRONT);
+        SignText backText = stack == null ? null : stack.get(DataComponents.SIGN_TEXT_BACK);
+        this.frontFace = frontText == null
+                ? SignNbtHelper.readFace(legacy, SignNbtHelper.KEY_FRONT_TEXT)
+                : SignNbtHelper.fromSignText(frontText);
+        this.backFace = backText == null
+                ? SignNbtHelper.readFace(legacy, SignNbtHelper.KEY_BACK_TEXT)
+                : SignNbtHelper.fromSignText(backText);
+        this.initiallyWaxed = (stack != null && stack.has(DataComponents.WAXED)) || SignNbtHelper.readWaxed(legacy);
     }
 
-    private static BlockEntityType<?> resolveBlockEntityType(ItemStack stack) {
-        if (stack != null && stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem
-                && blockItem.getBlock() instanceof net.minecraft.world.level.block.HangingSignBlock) {
-            return BlockEntityTypes.HANGING_SIGN;
-        }
-        return BlockEntityTypes.SIGN;
+    private static CompoundTag legacyPayload(ItemStack stack) {
+        TypedEntityData<BlockEntityType<?>> data = stack == null ? null : stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        return data == null ? null : data.getUnsafe().copy();
     }
 
     @Override
     protected void setupEntries() {
-        this.waxedEntry = new BooleanEntryModel(this, ModTexts.gui("sign_waxed"), SignNbtHelper.readWaxed(this.root),
-                value -> this.root.putBoolean(SignNbtHelper.KEY_IS_WAXED, value));
+        this.waxedEntry = new BooleanEntryModel(this, ModTexts.gui("sign_waxed"), this.initiallyWaxed, value -> {
+        });
         getEntries().add(this.waxedEntry);
         addFaceEntries(this.frontFace, "sign_front");
         addFaceEntries(this.backFace, "sign_back");
@@ -62,20 +63,54 @@ public class ItemSignCategoryModel extends ItemEditorCategoryModel {
         if (stack == null) {
             return;
         }
-        CompoundTag payload = buildPayload();
-        if (!this.hadComponent && payload.equals(this.pristinePayload)) {
+        stack.set(DataComponents.SIGN_TEXT_FRONT, SignNbtHelper.toSignText(this.frontFace));
+        stack.set(DataComponents.SIGN_TEXT_BACK, SignNbtHelper.toSignText(this.backFace));
+        if (this.waxedEntry != null && Boolean.TRUE.equals(this.waxedEntry.getValue())) {
+            stack.set(DataComponents.WAXED, Unit.INSTANCE);
+        } else {
+            stack.remove(DataComponents.WAXED);
+        }
+        stripLegacyData(stack);
+        stripLegacyTag();
+    }
+
+    private static void stripLegacyData(ItemStack stack) {
+        TypedEntityData<BlockEntityType<?>> data = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (data == null) {
+            return;
+        }
+        CompoundTag payload = data.getUnsafe().copy();
+        stripLegacyKeys(payload);
+        if (payload.isEmpty()) {
             stack.remove(DataComponents.BLOCK_ENTITY_DATA);
         } else {
-            stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(this.blockEntityType, payload));
+            stack.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(data.type(), payload));
         }
     }
 
-    private CompoundTag buildPayload() {
-        CompoundTag payload = this.root.copy();
-        payload.put(SignNbtHelper.KEY_FRONT_TEXT, this.frontFace.copy());
-        payload.put(SignNbtHelper.KEY_BACK_TEXT, this.backFace.copy());
-        payload.remove("id");
-        return payload;
+    private void stripLegacyTag() {
+        CompoundTag root = getData();
+        if (root == null) {
+            return;
+        }
+        CompoundTag components = root.getCompound(COMPONENTS_KEY).orElse(null);
+        if (components == null) {
+            return;
+        }
+        CompoundTag payload = components.getCompound(BLOCK_ENTITY_DATA_KEY).orElse(null);
+        if (payload == null) {
+            return;
+        }
+        stripLegacyKeys(payload);
+        if (payload.isEmpty() || (payload.size() == 1 && payload.contains(ID_KEY))) {
+            components.remove(BLOCK_ENTITY_DATA_KEY);
+        }
+    }
+
+    private static void stripLegacyKeys(CompoundTag payload) {
+        payload.remove(SignNbtHelper.KEY_FRONT_TEXT);
+        payload.remove(SignNbtHelper.KEY_BACK_TEXT);
+        payload.remove(SignNbtHelper.KEY_IS_WAXED);
     }
 
     private void addFaceEntries(CompoundTag face, String titleKey) {

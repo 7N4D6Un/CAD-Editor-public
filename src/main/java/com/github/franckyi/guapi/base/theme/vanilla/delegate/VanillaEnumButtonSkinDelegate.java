@@ -9,6 +9,6 @@ public class VanillaEnumButtonSkinDelegate extends VanillaButtonSkinDelegate<Enu
     }
 
     protected boolean isValidClickButton(MouseButtonInfo buttonInfo) {
-        return super.isValidClickButton(buttonInfo) || buttonInfo.button() == 1;
+        return super.isValidClickButton(buttonInfo) || buttonInfo.button() == 3;
     }
 }

@@ -35,6 +35,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.BlockTransformer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -49,6 +50,10 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.JukeboxSong;
+import net.minecraft.world.level.storage.loot.providers.number.floats.ContextFloatProvider;
+import net.minecraft.world.level.storage.loot.providers.number.floats.ContextFloatProviders;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProvider;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -98,6 +103,12 @@ public final class ClientCache {
     private static List<ListSelectionElementModel> instrumentSelectionItems;
     private static List<String> jukeboxSongSuggestions;
     private static List<ListSelectionElementModel> jukeboxSongSelectionItems;
+    private static List<String> blockTransformerSuggestions;
+    private static List<ListSelectionElementModel> blockTransformerSelectionItems;
+    private static List<String> contextIntProviderSuggestions;
+    private static List<ListSelectionElementModel> contextIntProviderSelectionItems;
+    private static List<String> contextFloatProviderSuggestions;
+    private static List<ListSelectionElementModel> contextFloatProviderSelectionItems;
     private static List<String> soundEventSuggestions;
     private static List<SoundEventListSelectionElementModel> soundEventSelectionItems;
     private static List<ListSelectionFilter> soundEventFilters;
@@ -145,6 +156,12 @@ public final class ClientCache {
         instrumentSelectionItems = null;
         jukeboxSongSuggestions = null;
         jukeboxSongSelectionItems = null;
+        blockTransformerSuggestions = null;
+        blockTransformerSelectionItems = null;
+        contextIntProviderSuggestions = null;
+        contextIntProviderSelectionItems = null;
+        contextFloatProviderSuggestions = null;
+        contextFloatProviderSelectionItems = null;
         soundEventSuggestions = null;
         soundEventSelectionItems = null;
         soundEventFilters = null;
@@ -562,6 +579,48 @@ public final class ClientCache {
         return jukeboxSongSuggestions;
     }
 
+    public static List<ListSelectionElementModel> getBlockTransformerSelectionItems() {
+        if (blockTransformerSelectionItems == null) {
+            blockTransformerSelectionItems = (List) registryAccess().lookup(Registries.BLOCK_TRANSFORMER).map(ClientCache::buildBlockTransformerSelectionItems).orElseGet(List::of);
+        }
+        return blockTransformerSelectionItems;
+    }
+
+    public static List<String> getBlockTransformerSuggestions() {
+        if (blockTransformerSuggestions == null) {
+            blockTransformerSuggestions = getBlockTransformerSelectionItems().stream().map(element -> element.getId().toString()).toList();
+        }
+        return blockTransformerSuggestions;
+    }
+
+    public static List<ListSelectionElementModel> getContextIntProviderSelectionItems() {
+        if (contextIntProviderSelectionItems == null) {
+            contextIntProviderSelectionItems = buildContextIntProviderSelectionItems();
+        }
+        return contextIntProviderSelectionItems;
+    }
+
+    public static List<String> getContextIntProviderSuggestions() {
+        if (contextIntProviderSuggestions == null) {
+            contextIntProviderSuggestions = getContextIntProviderSelectionItems().stream().map(element -> element.getId().toString()).toList();
+        }
+        return contextIntProviderSuggestions;
+    }
+
+    public static List<ListSelectionElementModel> getContextFloatProviderSelectionItems() {
+        if (contextFloatProviderSelectionItems == null) {
+            contextFloatProviderSelectionItems = buildContextFloatProviderSelectionItems();
+        }
+        return contextFloatProviderSelectionItems;
+    }
+
+    public static List<String> getContextFloatProviderSuggestions() {
+        if (contextFloatProviderSuggestions == null) {
+            contextFloatProviderSuggestions = getContextFloatProviderSelectionItems().stream().map(element -> element.getId().toString()).toList();
+        }
+        return contextFloatProviderSuggestions;
+    }
+
     public static List<ListSelectionElementModel> getInstrumentSelectionItems() {
         if (instrumentSelectionItems == null) {
             instrumentSelectionItems = (List) registryAccess().lookup(Registries.INSTRUMENT).map(ClientCache::buildInstrumentSelectionItems).orElseGet(List::of);
@@ -905,6 +964,59 @@ public final class ClientCache {
                 .toList();
     }
 
+    private static List<ListSelectionElementModel> buildBlockTransformerSelectionItems(HolderLookup.RegistryLookup<BlockTransformer> lookup) {
+        return lookup.listElements()
+                .map(holder -> new ListSelectionElementModel(holder.key().identifier().toString(), holder.key().identifier()))
+                .sorted()
+                .toList();
+    }
+
+    private static List<ListSelectionElementModel> buildContextIntProviderSelectionItems() {
+        List<ListSelectionElementModel> out = new ArrayList<>();
+        for (ResourceKey<ContextIntProvider> key : List.of(
+                ContextIntProviders.COMPOSTABLE_ALWAYS_ADD_ONE,
+                ContextIntProviders.COMPOSTABLE_LOW,
+                ContextIntProviders.COMPOSTABLE_LOW_MEDIUM,
+                ContextIntProviders.COMPOSTABLE_MEDIUM,
+                ContextIntProviders.COMPOSTABLE_MEDIUM_HIGH,
+                ContextIntProviders.COOKING_TIME_BAMBOO,
+                ContextIntProviders.COOKING_TIME_COAL,
+                ContextIntProviders.COOKING_TIME_COAL_BLOCK,
+                ContextIntProviders.COOKING_TIME_BLAZE_ROD,
+                ContextIntProviders.COOKING_TIME_LAVA_BUCKET,
+                ContextIntProviders.COOKING_TIME_BOATS,
+                ContextIntProviders.COOKING_TIME_WOOD_BLOCKS,
+                ContextIntProviders.COOKING_TIME_WOOD_ITEMS_EXTRA_SMALL,
+                ContextIntProviders.COOKING_TIME_WOOD_ITEMS_SMALL,
+                ContextIntProviders.COOKING_TIME_WOOD_ITEMS_LARGE,
+                ContextIntProviders.COOKING_TIME_WOOD_SLABS,
+                ContextIntProviders.COOKING_TIME_HANGING_SIGNS,
+                ContextIntProviders.COOKING_TIME_DRY_PLANTS,
+                ContextIntProviders.COOKING_TIME_ROOTS,
+                ContextIntProviders.COOKING_TIME_WOOL,
+                ContextIntProviders.COOKING_TIME_WOOL_CARPETS,
+                ContextIntProviders.COOKING_TIME_WOOL_SLABS,
+                ContextIntProviders.COOKING_TIME_DRIED_KELP_BLOCK,
+                ContextIntProviders.COOKING_NORMAL_BURN_TIME_REDUCTION_FACTOR,
+                ContextIntProviders.COOKING_FAST_BURN_TIME_REDUCTION_FACTOR,
+                ContextIntProviders.BREWING_DEFAULT_USES)) {
+            out.add(new ListSelectionElementModel(key.identifier().toString(), key.identifier()));
+        }
+        return out;
+    }
+
+    private static List<ListSelectionElementModel> buildContextFloatProviderSelectionItems() {
+        List<ListSelectionElementModel> out = new ArrayList<>();
+        for (ResourceKey<ContextFloatProvider> key : List.of(
+                ContextFloatProviders.COOKING_DEFAULT_SPEED_MULTIPLIER,
+                ContextFloatProviders.COOKING_NORMAL_SPEED_MULTIPLIER,
+                ContextFloatProviders.COOKING_FAST_SPEED_MULTIPLIER,
+                ContextFloatProviders.BREWING_DEFAULT_SPEED_MULTIPLIER)) {
+            out.add(new ListSelectionElementModel(key.identifier().toString(), key.identifier()));
+        }
+        return out;
+    }
+
     private static List<ListSelectionElementModel> buildInstrumentSelectionItems(HolderLookup.RegistryLookup<Instrument> lookup) {
         return lookup.listElements().map(holder -> new ListSelectionElementModel(holder.key().identifier().toString(), holder.key().identifier())).sorted().toList();
     }
@@ -928,6 +1040,7 @@ public final class ClientCache {
     private static List<Identifier> buildBuiltinEquipmentAssets() {
         List<Identifier> ids = new ArrayList<>();
         ids.add(Identifier.withDefaultNamespace("leather"));
+        ids.add(Identifier.withDefaultNamespace("copper"));
         ids.add(Identifier.withDefaultNamespace("chainmail"));
         ids.add(Identifier.withDefaultNamespace("iron"));
         ids.add(Identifier.withDefaultNamespace("gold"));
@@ -938,6 +1051,7 @@ public final class ClientCache {
         ids.add(Identifier.withDefaultNamespace("elytra"));
         ids.add(Identifier.withDefaultNamespace("saddle"));
         ids.add(Identifier.withDefaultNamespace("trader_llama"));
+        ids.add(Identifier.withDefaultNamespace("trader_llama_baby"));
         for (String color : List.of(new String[]{"white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"})) {
             ids.add(Identifier.withDefaultNamespace("carpet_" + color));
             ids.add(Identifier.withDefaultNamespace("harness_" + color));

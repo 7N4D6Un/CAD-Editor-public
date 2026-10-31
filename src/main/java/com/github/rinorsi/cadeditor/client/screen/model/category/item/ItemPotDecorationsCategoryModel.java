@@ -3,15 +3,14 @@ package com.github.rinorsi.cadeditor.client.screen.model.category.item;
 import com.github.rinorsi.cadeditor.client.screen.model.ItemEditorModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.PotDecorationEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
-import com.github.rinorsi.cadeditor.client.util.NbtHelper;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.level.block.entity.PotDecorations;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
@@ -43,8 +42,8 @@ public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(frontEntry);
     }
 
-    private PotDecorationEntryModel createEntry(net.minecraft.network.chat.MutableComponent label, Optional<Item> optionalItem) {
-        ItemStack stack = optionalItem.map(ItemStack::new).orElseGet(() -> new ItemStack(Items.BRICK));
+    private PotDecorationEntryModel createEntry(MutableComponent label, Optional<ItemStackTemplate> optionalItem) {
+        ItemStack stack = optionalItem.map(ItemStackTemplate::create).orElse(ItemStack.EMPTY);
         return new PotDecorationEntryModel(this, label, stack);
     }
 
@@ -52,29 +51,29 @@ public class ItemPotDecorationsCategoryModel extends ItemEditorCategoryModel {
     public void apply() {
         super.apply();
 
-        Optional<Item> back = toItem(backEntry);
-        Optional<Item> left = toItem(leftEntry);
-        Optional<Item> right = toItem(rightEntry);
-        Optional<Item> front = toItem(frontEntry);
+        Optional<ItemStackTemplate> back = toTemplate(backEntry);
+        Optional<ItemStackTemplate> left = toTemplate(leftEntry);
+        Optional<ItemStackTemplate> right = toTemplate(rightEntry);
+        Optional<ItemStackTemplate> front = toTemplate(frontEntry);
 
         PotDecorations decorations = new PotDecorations(back, left, right, front);
         ItemStack stack = getParent().getContext().getItemStack();
-        if (decorations.equals(PotDecorations.EMPTY)) {
-            stack.remove(DataComponents.POT_DECORATIONS);
-        } else {
-            stack.set(DataComponents.POT_DECORATIONS, decorations);
+        if (!Objects.equals(stack.get(DataComponents.POT_DECORATIONS), decorations)) {
+            if (decorations.equals(PotDecorations.EMPTY)) {
+                stack.remove(DataComponents.POT_DECORATIONS);
+            } else {
+                stack.set(DataComponents.POT_DECORATIONS, decorations);
+            }
         }
         cleanComponentTag();
     }
 
-    private Optional<Item> toItem(PotDecorationEntryModel entry) {
+    private Optional<ItemStackTemplate> toTemplate(PotDecorationEntryModel entry) {
         ItemStack stack = entry.getItemStack();
-        if (stack.isEmpty() || stack.is(Items.BRICK)) {
-            entry.setValid(true);
+        if (stack.isEmpty()) {
             return Optional.empty();
         }
-        entry.setValid(true);
-        return Optional.of(stack.getItem());
+        return Optional.of(ItemStackTemplate.fromNonEmptyStack(stack));
     }
 
     private void cleanComponentTag() {

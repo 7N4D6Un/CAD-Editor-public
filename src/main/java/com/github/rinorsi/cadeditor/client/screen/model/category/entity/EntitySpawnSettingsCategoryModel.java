@@ -38,7 +38,7 @@ import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.world.entity.decoration.painting.Painting;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.minecraft.world.entity.monster.PatrollingMonster;
 import net.minecraft.world.entity.monster.Shulker;
 import net.minecraft.world.entity.raid.Raid;
@@ -95,7 +95,7 @@ public class EntitySpawnSettingsCategoryModel extends EntityCategoryModel {
     }
 
     private void addCarriedBlockEntry(CompoundTag data) {
-        if (!(getEntity() instanceof EnderMan)) {
+        if (!(getEntity() instanceof Enderman)) {
             return;
         }
         CompoundTag carried = data.getCompound("carriedBlockState").orElse(null);

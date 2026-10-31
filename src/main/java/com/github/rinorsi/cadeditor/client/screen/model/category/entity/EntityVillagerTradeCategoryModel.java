@@ -18,7 +18,6 @@ public class EntityVillagerTradeCategoryModel extends EntityCategoryModel {
     private static final String OFFERS_TAG = "Offers";
     private static final String RECIPES_TAG = "Recipes";
     private static final String VILLAGER_DATA_TAG = "VillagerData";
-    private static final String ASSIGN_PROFESSION_WHEN_SPAWNED_TAG = "AssignProfessionWhenSpawned";
     private static final String DEFAULT_VILLAGER_TYPE = "minecraft:plains";
     private static final String DEFAULT_TRADING_PROFESSION = "minecraft:farmer";
     private static final String NONE_PROFESSION = "minecraft:none";
@@ -174,7 +173,6 @@ public class EntityVillagerTradeCategoryModel extends EntityCategoryModel {
         villagerData.putString("type", normalizeId(villagerData.getStringOr("type", ""), DEFAULT_VILLAGER_TYPE));
         villagerData.putInt("level", clampLevel(villagerData.getIntOr("level", 1)));
         data.put(VILLAGER_DATA_TAG, villagerData);
-        data.putBoolean(ASSIGN_PROFESSION_WHEN_SPAWNED_TAG, false);
     }
 
     private static String normalizeId(String value, String defaultValue) {

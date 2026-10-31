@@ -24,6 +24,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -69,12 +71,18 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
     private float attackRangeMaxCreative;
     private float attackRangeHitboxMargin;
     private float attackRangeMobFactor;
-    private BooleanEntryModel swingAnimationToggleEntry;
-    private StringWithActionsEntryModel swingAnimationTypeEntry;
-    private IntegerEntryModel swingAnimationDurationEntry;
-    private boolean swingAnimationEnabled;
-    private String swingAnimationTypeId;
-    private int swingAnimationDuration;
+    private BooleanEntryModel attackAnimationToggleEntry;
+    private StringWithActionsEntryModel attackAnimationTypeEntry;
+    private IntegerEntryModel attackAnimationDurationEntry;
+    private boolean attackAnimationEnabled;
+    private String attackAnimationTypeId;
+    private int attackAnimationDuration;
+    private BooleanEntryModel interactAnimationToggleEntry;
+    private StringWithActionsEntryModel interactAnimationTypeEntry;
+    private IntegerEntryModel interactAnimationDurationEntry;
+    private boolean interactAnimationEnabled;
+    private String interactAnimationTypeId;
+    private int interactAnimationDuration;
     private BooleanEntryModel piercingWeaponToggleEntry;
     private BooleanEntryModel piercingWeaponDealsKnockbackEntry;
     private BooleanEntryModel piercingWeaponDismountsEntry;
@@ -210,18 +218,43 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         getEntries().add(this.attackRangeHitboxMarginEntry);
         getEntries().add(this.attackRangeMobFactorEntry);
         getEntries().add(new SpacerEntryModel(this));
-        SwingAnimation swingAnimation = stack.get(DataComponents.SWING_ANIMATION);
-        this.swingAnimationEnabled = swingAnimation != null;
-        this.swingAnimationTypeId = swingAnimation != null ? swingAnimation.type().getSerializedName() : SwingAnimation.DEFAULT.type().getSerializedName();
-        this.swingAnimationDuration = swingAnimation != null ? swingAnimation.duration() : SwingAnimation.DEFAULT.duration();
-        this.swingAnimationToggleEntry = new BooleanEntryModel(this, ModTexts.gui("swing_animation_enabled"), this.swingAnimationEnabled, value -> setSwingAnimationEnabled(value));
-        getEntries().add(this.swingAnimationToggleEntry);
-        this.swingAnimationTypeEntry = new StringWithActionsEntryModel(this, ModTexts.gui("swing_animation_type"), this.swingAnimationTypeId, this::setSwingAnimationTypeId);
-        this.swingAnimationTypeEntry.setPlaceholder("whack | stab | none");
-        this.swingAnimationTypeEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_swing_animation_type"), this::openSwingAnimationTypeSelection));
-        this.swingAnimationDurationEntry = new IntegerEntryModel(this, ModTexts.gui("swing_animation_duration"), this.swingAnimationDuration, this::setSwingAnimationDuration, value -> value != null && value >= 1);
-        getEntries().add(this.swingAnimationTypeEntry);
-        getEntries().add(this.swingAnimationDurationEntry);
+        SwingAnimation legacyAnimation = readLegacySwingAnimation();
+        if (legacyAnimation != null) {
+            getParent().removeComponentFromDataTag("minecraft:swing_animation");
+        }
+        SwingAnimation attackAnimation = stack.get(DataComponents.ATTACK_ANIMATION);
+        if (attackAnimation == null && legacyAnimation != null) {
+            attackAnimation = legacyAnimation;
+            stack.set(DataComponents.ATTACK_ANIMATION, legacyAnimation);
+        }
+        this.attackAnimationEnabled = attackAnimation != null;
+        this.attackAnimationTypeId = attackAnimation != null ? attackAnimation.type().getSerializedName() : SwingAnimation.DEFAULT.type().getSerializedName();
+        this.attackAnimationDuration = attackAnimation != null ? attackAnimation.duration() : SwingAnimation.DEFAULT.duration();
+        this.attackAnimationToggleEntry = new BooleanEntryModel(this, ModTexts.gui("attack_animation_enabled"), this.attackAnimationEnabled, value -> setAttackAnimationEnabled(value));
+        getEntries().add(this.attackAnimationToggleEntry);
+        this.attackAnimationTypeEntry = new StringWithActionsEntryModel(this, ModTexts.gui("attack_animation_type"), this.attackAnimationTypeId, this::setAttackAnimationTypeId);
+        this.attackAnimationTypeEntry.setPlaceholder("whack | stab | none");
+        this.attackAnimationTypeEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_attack_animation_type"), this::openAttackAnimationTypeSelection));
+        this.attackAnimationDurationEntry = new IntegerEntryModel(this, ModTexts.gui("attack_animation_duration"), this.attackAnimationDuration, this::setAttackAnimationDuration, value -> value != null && value >= 0);
+        getEntries().add(this.attackAnimationTypeEntry);
+        getEntries().add(this.attackAnimationDurationEntry);
+        getEntries().add(new SpacerEntryModel(this));
+        SwingAnimation interactAnimation = stack.get(DataComponents.INTERACT_ANIMATION);
+        if (interactAnimation == null && legacyAnimation != null) {
+            interactAnimation = legacyAnimation;
+            stack.set(DataComponents.INTERACT_ANIMATION, legacyAnimation);
+        }
+        this.interactAnimationEnabled = interactAnimation != null;
+        this.interactAnimationTypeId = interactAnimation != null ? interactAnimation.type().getSerializedName() : SwingAnimation.DEFAULT.type().getSerializedName();
+        this.interactAnimationDuration = interactAnimation != null ? interactAnimation.duration() : SwingAnimation.DEFAULT.duration();
+        this.interactAnimationToggleEntry = new BooleanEntryModel(this, ModTexts.gui("interact_animation_enabled"), this.interactAnimationEnabled, value -> setInteractAnimationEnabled(value));
+        getEntries().add(this.interactAnimationToggleEntry);
+        this.interactAnimationTypeEntry = new StringWithActionsEntryModel(this, ModTexts.gui("interact_animation_type"), this.interactAnimationTypeId, this::setInteractAnimationTypeId);
+        this.interactAnimationTypeEntry.setPlaceholder("whack | stab | none");
+        this.interactAnimationTypeEntry.addButton(new StringWithActionsEntryModel.ActionButton(ModTextures.SEARCH, ModTexts.gui("select_interact_animation_type"), this::openInteractAnimationTypeSelection));
+        this.interactAnimationDurationEntry = new IntegerEntryModel(this, ModTexts.gui("interact_animation_duration"), this.interactAnimationDuration, this::setInteractAnimationDuration, value -> value != null && value >= 0);
+        getEntries().add(this.interactAnimationTypeEntry);
+        getEntries().add(this.interactAnimationDurationEntry);
         getEntries().add(new SpacerEntryModel(this));
         PiercingWeapon piercingWeapon = stack.get(DataComponents.PIERCING_WEAPON);
         this.piercingWeaponEnabled = piercingWeapon != null;
@@ -371,7 +404,8 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         syncMinimumAttackChargeEntriesEnabled();
         syncDirectDamageTypeEntriesEnabled();
         syncAttackRangeEntriesEnabled();
-        syncSwingAnimationEntriesEnabled();
+        syncAttackAnimationEntriesEnabled();
+        syncInteractAnimationEntriesEnabled();
         syncPiercingWeaponEntriesEnabled();
         syncKineticWeaponEntriesEnabled();
         syncBlocksAttacksEntriesEnabled();
@@ -471,23 +505,43 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private void setSwingAnimationEnabled(boolean value) {
-        this.swingAnimationEnabled = value;
-        syncSwingAnimationEntriesEnabled();
-        applySwingAnimationComponent();
+    private void setAttackAnimationEnabled(boolean value) {
+        this.attackAnimationEnabled = value;
+        syncAttackAnimationEntriesEnabled();
+        applyAttackAnimationComponent();
     }
 
-    private void setSwingAnimationTypeId(String value) {
-        this.swingAnimationTypeId = value == null ? "" : value.trim();
-        if (this.swingAnimationEnabled) {
-            applySwingAnimationComponent();
+    private void setAttackAnimationTypeId(String value) {
+        this.attackAnimationTypeId = value == null ? "" : value.trim();
+        if (this.attackAnimationEnabled) {
+            applyAttackAnimationComponent();
         }
     }
 
-    private void setSwingAnimationDuration(Integer value) {
-        this.swingAnimationDuration = value == null ? SwingAnimation.DEFAULT.duration() : Math.max(1, value);
-        if (this.swingAnimationEnabled) {
-            applySwingAnimationComponent();
+    private void setAttackAnimationDuration(Integer value) {
+        this.attackAnimationDuration = value == null ? SwingAnimation.DEFAULT.duration() : Math.max(0, value);
+        if (this.attackAnimationEnabled) {
+            applyAttackAnimationComponent();
+        }
+    }
+
+    private void setInteractAnimationEnabled(boolean value) {
+        this.interactAnimationEnabled = value;
+        syncInteractAnimationEntriesEnabled();
+        applyInteractAnimationComponent();
+    }
+
+    private void setInteractAnimationTypeId(String value) {
+        this.interactAnimationTypeId = value == null ? "" : value.trim();
+        if (this.interactAnimationEnabled) {
+            applyInteractAnimationComponent();
+        }
+    }
+
+    private void setInteractAnimationDuration(Integer value) {
+        this.interactAnimationDuration = value == null ? SwingAnimation.DEFAULT.duration() : Math.max(0, value);
+        if (this.interactAnimationEnabled) {
+            applyInteractAnimationComponent();
         }
     }
 
@@ -778,17 +832,33 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         });
     }
 
-    private void openSwingAnimationTypeSelection() {
-        ModScreenHandler.openListSelectionScreen(ModTexts.gui("select_swing_animation_type"), "swing_animation_type", swingAnimationTypeSelectionItems(), value -> {
+    private void openAttackAnimationTypeSelection() {
+        openAnimationTypeSelection(false, "attack_animation_type", "select_attack_animation_type");
+    }
+
+    private void openInteractAnimationTypeSelection() {
+        openAnimationTypeSelection(true, "interact_animation_type", "select_interact_animation_type");
+    }
+
+    private void openAnimationTypeSelection(boolean interact, String attributeName, String titleKey) {
+        ModScreenHandler.openListSelectionScreen(ModTexts.gui(titleKey), attributeName, swingAnimationTypeSelectionItems(), value -> {
             if (value == null || value.isBlank()) {
                 return;
             }
             Identifier id = tryParse(value);
             String normalized = id != null ? id.getPath() : value;
-            this.swingAnimationTypeId = normalized;
-            this.swingAnimationTypeEntry.setValue(normalized);
-            if (this.swingAnimationEnabled) {
-                applySwingAnimationComponent();
+            if (interact) {
+                this.interactAnimationTypeId = normalized;
+                this.interactAnimationTypeEntry.setValue(normalized);
+                if (this.interactAnimationEnabled) {
+                    applyInteractAnimationComponent();
+                }
+            } else {
+                this.attackAnimationTypeId = normalized;
+                this.attackAnimationTypeEntry.setValue(normalized);
+                if (this.attackAnimationEnabled) {
+                    applyAttackAnimationComponent();
+                }
             }
         });
     }
@@ -898,28 +968,65 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         }
     }
 
-    private void applySwingAnimationComponent() {
+    private void applyAttackAnimationComponent() {
         ItemStack stack = getParent().getContext().getItemStack();
-        if (!this.swingAnimationEnabled) {
-            stack.remove(DataComponents.SWING_ANIMATION);
-            getParent().removeComponentFromDataTag("minecraft:swing_animation");
-            if (this.swingAnimationTypeEntry != null) {
-                this.swingAnimationTypeEntry.setValid(true);
+        getParent().removeComponentFromDataTag("minecraft:swing_animation");
+        if (!this.attackAnimationEnabled) {
+            stack.remove(DataComponents.ATTACK_ANIMATION);
+            getParent().removeComponentFromDataTag("minecraft:attack_animation");
+            if (this.attackAnimationTypeEntry != null) {
+                this.attackAnimationTypeEntry.setValid(true);
                 return;
             }
             return;
         }
-        Optional<SwingAnimationType> parsedType = parseSwingAnimationType(this.swingAnimationTypeId);
+        Optional<SwingAnimationType> parsedType = parseSwingAnimationType(this.attackAnimationTypeId);
         if (parsedType.isEmpty()) {
-            if (this.swingAnimationTypeEntry != null) {
-                this.swingAnimationTypeEntry.setValid(false);
+            if (this.attackAnimationTypeEntry != null) {
+                this.attackAnimationTypeEntry.setValid(false);
             }
         } else {
-            if (this.swingAnimationTypeEntry != null) {
-                this.swingAnimationTypeEntry.setValid(true);
+            if (this.attackAnimationTypeEntry != null) {
+                this.attackAnimationTypeEntry.setValid(true);
             }
-            stack.set(DataComponents.SWING_ANIMATION, new SwingAnimation(parsedType.get(), Math.max(1, this.swingAnimationDuration)));
+            stack.set(DataComponents.ATTACK_ANIMATION, new SwingAnimation(parsedType.get(), Math.max(0, this.attackAnimationDuration)));
         }
+    }
+
+    private void applyInteractAnimationComponent() {
+        ItemStack stack = getParent().getContext().getItemStack();
+        if (!this.interactAnimationEnabled) {
+            stack.remove(DataComponents.INTERACT_ANIMATION);
+            getParent().removeComponentFromDataTag("minecraft:interact_animation");
+            if (this.interactAnimationTypeEntry != null) {
+                this.interactAnimationTypeEntry.setValid(true);
+                return;
+            }
+            return;
+        }
+        Optional<SwingAnimationType> parsedType = parseSwingAnimationType(this.interactAnimationTypeId);
+        if (parsedType.isEmpty()) {
+            if (this.interactAnimationTypeEntry != null) {
+                this.interactAnimationTypeEntry.setValid(false);
+            }
+        } else {
+            if (this.interactAnimationTypeEntry != null) {
+                this.interactAnimationTypeEntry.setValid(true);
+            }
+            stack.set(DataComponents.INTERACT_ANIMATION, new SwingAnimation(parsedType.get(), Math.max(0, this.interactAnimationDuration)));
+        }
+    }
+
+    private SwingAnimation readLegacySwingAnimation() {
+        CompoundTag data = getData();
+        if (data == null) {
+            return null;
+        }
+        CompoundTag components = data.getCompound("components").orElse(null);
+        if (components == null || !(components.get("minecraft:swing_animation") instanceof CompoundTag legacy)) {
+            return null;
+        }
+        return SwingAnimation.CODEC.parse(NbtOps.INSTANCE, legacy).result().orElse(null);
     }
 
     private void applyPiercingWeaponComponent() {
@@ -1028,9 +1135,14 @@ public class ItemWeaponCategoryModel extends ItemEditorCategoryModel {
         this.attackRangeMobFactorEntry.setEnabled(this.attackRangeEnabled);
     }
 
-    private void syncSwingAnimationEntriesEnabled() {
-        this.swingAnimationTypeEntry.setEnabled(this.swingAnimationEnabled);
-        this.swingAnimationDurationEntry.setEnabled(this.swingAnimationEnabled);
+    private void syncAttackAnimationEntriesEnabled() {
+        this.attackAnimationTypeEntry.setEnabled(this.attackAnimationEnabled);
+        this.attackAnimationDurationEntry.setEnabled(this.attackAnimationEnabled);
+    }
+
+    private void syncInteractAnimationEntriesEnabled() {
+        this.interactAnimationTypeEntry.setEnabled(this.interactAnimationEnabled);
+        this.interactAnimationDurationEntry.setEnabled(this.interactAnimationEnabled);
     }
 
     private void syncPiercingWeaponEntriesEnabled() {

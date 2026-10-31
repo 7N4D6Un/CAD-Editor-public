@@ -59,11 +59,11 @@ public class VanillaSliderSkinDelegate extends AbstractSliderButton implements V
     }
 
     public boolean keyPressed(KeyEvent event) {
-        if (event.key() == 262) {
+        if (event.key() == 79) {
             this.node.increment();
             return true;
         }
-        if (event.key() == 263) {
+        if (event.key() == 80) {
             this.node.decrement();
             return true;
         }

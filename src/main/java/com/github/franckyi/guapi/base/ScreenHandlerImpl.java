@@ -176,11 +176,11 @@ public final class ScreenHandlerImpl implements ScreenHandler {
     }
 
     private boolean keyPressed(KeyEvent event) {
-        return handleEvent(ScreenEventType.KEY_PRESSED, new KeyEventImpl(event.key(), event.scancode(), event.modifiers()));
+        return handleEvent(ScreenEventType.KEY_PRESSED, new KeyEventImpl(event.key(), event.keycode(), event.modifiers()));
     }
 
     private boolean keyReleased(KeyEvent event) {
-        return handleEvent(ScreenEventType.KEY_RELEASED, new KeyEventImpl(event.key(), event.scancode(), event.modifiers()));
+        return handleEvent(ScreenEventType.KEY_RELEASED, new KeyEventImpl(event.key(), event.keycode(), event.modifiers()));
     }
 
     private boolean charTyped(CharacterEvent event) {

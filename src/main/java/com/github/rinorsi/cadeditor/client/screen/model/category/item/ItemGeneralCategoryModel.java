@@ -15,7 +15,6 @@ import com.github.rinorsi.cadeditor.client.screen.model.entry.StringEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.StringWithActionsEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.RaritySelectionEntryModel;
 import com.github.rinorsi.cadeditor.client.screen.model.entry.item.SoundEventSelectionEntryModel;
-import com.github.rinorsi.cadeditor.client.screen.model.entry.item.JukeboxSongSelectionEntryModel;
 import com.github.rinorsi.cadeditor.common.ModTexts;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,8 +39,6 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.JukeboxPlayable;
-import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.component.DamageResistant;
@@ -59,11 +56,8 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
     private boolean enableCustomModelData;
     private StringWithActionsEntryModel repairableItemsEntry;
     private String repairableItemsRaw;
-    private JukeboxSongSelectionEntryModel jukeboxSongEntry;
-    private String jukeboxSongId;
     private SoundEventSelectionEntryModel breakSoundEntry;
     private String breakSoundId;
-
     public ItemGeneralCategoryModel(ItemEditorModel editor) {
         super(ModTexts.GENERAL, editor);
     }
@@ -83,10 +77,6 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         StringEntryModel tooltipStyleEntry = new StringEntryModel(this, ModTexts.gui("tooltip_style"), getTooltipStyleId(stack), this::setTooltipStyleId);
         tooltipStyleEntry.setPlaceholder("minecraft:classic");
         getEntries().add(tooltipStyleEntry);
-        JukeboxPlayable jukeboxPlayable = stack.get(DataComponents.JUKEBOX_PLAYABLE);
-        this.jukeboxSongId = jukeboxPlayable != null ? jukeboxPlayable.song().unwrapKey().map(key -> key.identifier().toString()).orElse("") : "";
-        this.jukeboxSongEntry = new JukeboxSongSelectionEntryModel(this, this.jukeboxSongId, this::setJukeboxSongId);
-        getEntries().add(this.jukeboxSongEntry);
         getEntries().add(new SpacerEntryModel(this));
         int currentDamage = stack.isDamageableItem() ? stack.getDamageValue() : 0;
         boolean isUnbreakable = stack.has(DataComponents.UNBREAKABLE);
@@ -732,38 +722,6 @@ public class ItemGeneralCategoryModel extends ItemEditorCategoryModel {
         } else {
             this.damageResistantTypesEntry.setValid(true);
             stack.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(HolderSet.direct(holders)));
-        }
-    }
-
-    private void setJukeboxSongId(String value) {
-        this.jukeboxSongId = value == null ? "" : value.trim();
-        applyJukeboxPlayableComponent();
-    }
-
-    private void applyJukeboxPlayableComponent() {
-        ItemStack stack = getParent().getContext().getItemStack();
-        if (this.jukeboxSongId.isBlank()) {
-            stack.remove(DataComponents.JUKEBOX_PLAYABLE);
-            getParent().removeComponentFromDataTag("minecraft:jukebox_playable");
-            return;
-        }
-        Identifier parsed = tryParse(this.jukeboxSongId);
-        if (parsed == null) {
-            stack.remove(DataComponents.JUKEBOX_PLAYABLE);
-            return;
-        }
-        HolderLookup.RegistryLookup<JukeboxSong> lookup = ClientUtil.registryAccess()
-                .lookup(Registries.JUKEBOX_SONG)
-                .orElse(null);
-        if (lookup == null) {
-            return;
-        }
-        ResourceKey<JukeboxSong> key = ResourceKey.create(Registries.JUKEBOX_SONG, parsed);
-        Optional<Holder.Reference<JukeboxSong>> holder = lookup.get(key);
-        if (holder.isPresent()) {
-            stack.set(DataComponents.JUKEBOX_PLAYABLE, new JukeboxPlayable(holder.get()));
-        } else {
-            stack.remove(DataComponents.JUKEBOX_PLAYABLE);
         }
     }
 

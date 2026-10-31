@@ -24,13 +24,13 @@
   ],
   "accessWidener": "cadeditor.accesswidener",
   "depends": {
-    "fabricloader": ">=0.19.3",
-    "fabric-api": ">=0.154.2",
-    "minecraft": "26.2",
+    "fabricloader": ">=0.19.5",
+    "fabric-api": ">=0.160.7+26.3",
+    "minecraft": "26.3",
     "java": ">=25"
   },
   "suggests": {
-    "modmenu": ">=20.0.1"
+    "modmenu": ">=21.0.0"
   },
   "contact": {
     "sources": "https://github.com/7N4D6Un/CAD-Editor-public"

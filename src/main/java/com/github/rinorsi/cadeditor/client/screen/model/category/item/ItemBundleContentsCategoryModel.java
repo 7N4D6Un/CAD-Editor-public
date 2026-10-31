@@ -23,7 +23,7 @@ public class ItemBundleContentsCategoryModel extends ItemEditorCategoryModel {
         ItemStack stack = getParent().getContext().getItemStack();
         BundleContents contents = stack.get(DataComponents.BUNDLE_CONTENTS);
         if (contents != null && !contents.isEmpty()) {
-            contents.itemCopyStream().forEach(item -> {
+            contents.itemCopies().forEach(item -> {
                 getEntries().add(new ItemContainerSlotEntryModel(this, item));
             });
         } else {

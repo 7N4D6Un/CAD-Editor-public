@@ -11,7 +11,6 @@ public class EntityVillagerDataCategoryModel extends EntityCategoryModel {
     private static final String VILLAGER_DATA_TAG = "VillagerData";
     private static final String OFFERS_TAG = "Offers";
     private static final String RECIPES_TAG = "Recipes";
-    private static final String ASSIGN_PROFESSION_WHEN_SPAWNED_TAG = "AssignProfessionWhenSpawned";
     private static final String XP_TAG = "Xp";
     private static final String NONE_PROFESSION = "minecraft:none";
     private static final int MIN_LOCKED_PROFESSION_XP = 1;
@@ -64,7 +63,6 @@ public class EntityVillagerDataCategoryModel extends EntityCategoryModel {
         villagerData.putInt("level", villagerLevel);
         data.put(VILLAGER_DATA_TAG, villagerData);
         if (!NONE_PROFESSION.equals(profession)) {
-            data.putBoolean(ASSIGN_PROFESSION_WHEN_SPAWNED_TAG, false);
             if (!hasCustomOffers(data) && data.getIntOr(XP_TAG, 0) < MIN_LOCKED_PROFESSION_XP) {
                 data.putInt(XP_TAG, MIN_LOCKED_PROFESSION_XP);
             }

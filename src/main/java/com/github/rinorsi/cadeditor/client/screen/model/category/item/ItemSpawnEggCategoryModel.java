@@ -33,7 +33,6 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
     private static final String VILLAGER_DATA_TAG = "VillagerData";
     private static final String OFFERS_TAG = "Offers";
     private static final String RECIPES_TAG = "Recipes";
-    private static final String ASSIGN_PROFESSION_WHEN_SPAWNED_TAG = "AssignProfessionWhenSpawned";
     private static final String XP_TAG = "Xp";
     private static final String NONE_PROFESSION = "minecraft:none";
     private static final String DEFAULT_TRADING_PROFESSION = "minecraft:farmer";
@@ -226,9 +225,6 @@ public class ItemSpawnEggCategoryModel extends ItemEditorCategoryModel {
         villagerData.putString("type", normalizeId(villagerData.getStringOr("type", ""), DEFAULT_VILLAGER_TYPE));
         villagerData.putInt("level", clampVillagerLevel(villagerData.getIntOr("level", 1)));
         tag.put(VILLAGER_DATA_TAG, villagerData);
-        if (hasOffers || !NONE_PROFESSION.equals(profession)) {
-            tag.putBoolean(ASSIGN_PROFESSION_WHEN_SPAWNED_TAG, false);
-        }
         if (!NONE_PROFESSION.equals(profession) && !hasOffers && tag.getIntOr(XP_TAG, 0) < 1) {
             tag.putInt(XP_TAG, 1);
         }
